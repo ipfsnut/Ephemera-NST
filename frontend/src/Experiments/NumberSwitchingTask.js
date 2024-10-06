@@ -1,56 +1,50 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { generateMarkovNumber } from '../utils/markovChain';
-import { numberSwitchingConfig as config } from '../config/numberSwitchingConfig';
-import { initDB, saveTrialData } from '../utils/indexedDB';import './NumberSwitchingTask.css';
+import { generateTrialNumbers } from '../utils/markovChain';
+import { CONFIG } from '../config/numberSwitchingConfig';
+import { initDB, saveTrialData } from '../utils/indexedDB';
+import './NumberSwitchingTask.css';
 
 const NumberSwitchingTask = () => {
+  const [trialNumbers, setTrialNumbers] = useState([]);
+  const [currentTrialIndex, setCurrentTrialIndex] = useState(0);
   const [currentNumber, setCurrentNumber] = useState(null);
-  const [trialCount, setTrialCount] = useState(0);
+  const [startTime, setStartTime] = useState(null);
   const [db, setDB] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
+  const [isExperimentComplete, setIsExperimentComplete] = useState(false);
 
   useEffect(() => {
     initDB().then(setDB);
+    setTrialNumbers(generateTrialNumbers());
   }, []);
 
-  const [startTime, setStartTime] = useState(null);
   useEffect(() => {
-    if (trialCount < config.totalTrials) {
-      const nextNumber = generateMarkovNumber(currentNumber);
-      setCurrentNumber(nextNumber);
+    if (trialNumbers.length > 0 && currentTrialIndex < CONFIG.TOTAL_TRIALS) {
+      setCurrentNumber(trialNumbers[currentTrialIndex].number);
       setStartTime(Date.now());
+    } else if (currentTrialIndex >= CONFIG.TOTAL_TRIALS) {
+      setIsExperimentComplete(true);
     }
-  }, [trialCount, currentNumber]);
+  }, [trialNumbers, currentTrialIndex]);
+
   const handleKeyPress = useCallback((event) => {
-    if (!isProcessing && (event.key === config.keyMappings.odd || event.key === config.keyMappings.even) && currentNumber !== null) {
-      setIsProcessing(true);
-      
-      const isCorrect = (event.key === config.keyMappings.odd && currentNumber % 2 !== 0) || 
-                        (event.key === config.keyMappings.even && currentNumber % 2 === 0);
+    if ((event.key === CONFIG.KEYS.ODD || event.key === CONFIG.KEYS.EVEN) && currentNumber !== null) {
+      const isOdd = parseInt(currentNumber[0]) % 2 !== 0;
+      const isCorrect = (event.key === CONFIG.KEYS.ODD && isOdd) || 
+                        (event.key === CONFIG.KEYS.EVEN && !isOdd);
       
       const trialData = {
-        trialNumber: trialCount + 1,
+        trialNumber: currentTrialIndex + 1,
         stimulus: currentNumber,
         response: event.key,
         correct: isCorrect,
-        reactionTime: Date.now() - startTime
+        reactionTime: Date.now() - startTime,
+        effortLevel: trialNumbers[currentTrialIndex].effortLevel
       };
 
       saveTrialData(db, trialData);
-      setTrialCount(prev => prev + 1);
-      
-      if (trialCount < config.totalTrials - 1) {
-        setTimeout(() => {
-          setCurrentNumber(generateMarkovNumber(currentNumber, config.markovTransitionProbabilities));
-          setIsProcessing(false);
-        }, config.interTrialInterval);
-      } else {
-        setCurrentNumber(null);
-        setIsProcessing(false);
-      }
+      setCurrentTrialIndex(prev => prev + 1);
     }
-  }, [currentNumber, trialCount, db, startTime, isProcessing]);
+  }, [currentNumber, currentTrialIndex, db, startTime, trialNumbers]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
@@ -59,21 +53,15 @@ const NumberSwitchingTask = () => {
     };
   }, [handleKeyPress]);
 
-  useEffect(() => {
-    if (trialCount === 0) {
-      setCurrentNumber(generateMarkovNumber(5, config.markovTransitionProbabilities));
-    }
-  }, [trialCount]);
-
-  if (currentNumber === null && trialCount >= config.totalTrials) {
-    return <div className="task-complete">Task Complete</div>;
+  if (isExperimentComplete) {
+    return <div className="task-complete">Experiment Complete</div>;
   }
 
   return (
     <div className="number-switching-task">
       <div className="number-display">{currentNumber}</div>
       <div className="instructions">
-        Press '{config.keyMappings.odd}' for odd, '{config.keyMappings.even}' for even
+        Press '{CONFIG.KEYS.ODD}' for odd, '{CONFIG.KEYS.EVEN}' for even
       </div>
     </div>
   );

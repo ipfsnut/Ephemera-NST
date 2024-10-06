@@ -1,15 +1,18 @@
-export const numberSwitchingConfig = {
-  totalTrials: 50,
-  stimulusDuration: 1500, // in milliseconds
-  interTrialInterval: 500, // in milliseconds
-  practiceTrials: 5,
-  markovTransitionProbabilities: {
-    even: { even: 0.3, odd: 0.7 },
-    odd: { even: 0.7, odd: 0.3 }
-  },
-  keyMappings: {
-    odd: 'f',
-    even: 'j'
-  },
-  numberRange: { min: 1, max: 9 }
-};
+export const CONFIG = {
+    TOTAL_TRIALS: 1,
+    DIGITS_PER_TRIAL: 15,
+    DIFFICULTY_LEVELS: {
+      1: { min: 1, max: 2 },
+      2: { min: 3, max: 4 },
+      3: { min: 5, max: 6 },
+      4: { min: 7, max: 8 },
+      5: { min: 9, max: 10 },
+      6: { min: 11, max: 12 },
+      7: { min: 13, max: 14 },
+    },
+    KEYS: {
+      ODD: 'f',
+      EVEN: 'j'
+    },
+    INTER_TRIAL_DELAY: 0 // milliseconds
+  };

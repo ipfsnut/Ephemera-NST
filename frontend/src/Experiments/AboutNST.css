@@ -1,0 +1,32 @@
+.about-nst {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  color: #007bff; /* Electric blue */
+  line-height: 1.6;
+}
+
+.about-nst h1 {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+}
+
+.about-nst h2 {
+  font-size: 1.8em;
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+
+.about-nst p {
+  margin-bottom: 15px;
+}
+
+.about-nst ul {
+  margin-left: 20px;
+  margin-bottom: 15px;
+}
+
+.about-nst li {
+  margin-bottom: 5px;
+}
