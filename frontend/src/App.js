@@ -4,6 +4,8 @@ import EventButton from './components/EventButton';
 import EventDisplay from './components/EventDisplay';
 import { fetchEvent } from './redux/eventSlice';
 import './components/App.css';
+import ExperimentList from './components/ExperimentList';
+
 
 const App = () => {
   const dispatch = useDispatch();
@@ -26,7 +28,13 @@ const App = () => {
       <main>
       {status === 'loading' && <div>Loading...</div>}
       {status === 'failed' && <div>Error: {error}</div>}
-      {status === 'succeeded' && <EventDisplay event={currentEvent} />}
+          {status === 'succeeded' && (
+            currentEvent.id === '2' ? (
+              <ExperimentList />
+            ) : (
+              <EventDisplay event={currentEvent} />
+            )
+          )}
       </main>
     </div>
   );
