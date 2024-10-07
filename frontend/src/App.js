@@ -19,12 +19,11 @@ const App = () => {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Ephemeral Observer</h1>
+        <h1>Ephemera</h1>
         <nav>
           <EventButton id="1" label="About" onClick={() => handleEventClick('1')} />
           <EventButton id="2" label="Experiment List" onClick={() => handleEventClick('2')} />
           <EventButton id="3" label="Literature" onClick={() => handleEventClick('3')} />
-          <EventButton id="4" label="Start Experiment" onClick={() => handleEventClick('4')} />
         </nav>
       </header>
       <main>
@@ -35,8 +34,6 @@ const App = () => {
             <ExperimentList />
           ) : currentEvent.id === '1' ? (
             <AboutNST />
-          ) : currentEvent.id === '4' ? (
-            <ExperimentScreen experimentType="NumberSwitchingTask" />
           ) : (
             <EventDisplay event={currentEvent} />
           )

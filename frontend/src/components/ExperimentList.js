@@ -32,7 +32,7 @@ const ExperimentList = () => {
         </ul>
       ) : (
         <div>
-          <h3>{selectedExperiment.name}</h3>
+          <h2>{selectedExperiment.name}</h2>
           <p>{selectedExperiment.description}</p>
           <selectedExperiment.component />
           <button onClick={() => setSelectedExperiment(null)}>Back to Experiment List</button>

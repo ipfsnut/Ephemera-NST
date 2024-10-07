@@ -20,6 +20,10 @@ body {
   font-size: 1.5rem;
   font-weight: bold;
 }
+.app-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
 nav {
   display: flex;
   gap: 1rem;

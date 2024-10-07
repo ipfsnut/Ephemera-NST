@@ -45,6 +45,24 @@ This task aims to:
 
 ## Importance
 Understanding cognitive flexibility is crucial in various fields, including psychology, neuroscience, and clinical assessments. This task provides valuable insights into an individual's ability to adapt to changing task demands, a skill essential in many real-world scenarios.
+
+## Markov Chain-Based Random Number Generation
+Markov chain-based random number generation uses the principles of Markov chains to produce sequences of random numbers. Here's a basic explanation:
+
+States: Define a set of states, each representing a range of numbers or specific values.
+Transition matrix: Create a matrix that defines the probability of moving from one state to another.
+Initial state: Choose a starting state.
+Generation: Use the transition probabilities to move between states, generating numbers based on the current state.
+Output: The sequence of states visited forms the random number sequence.
+
+This method can generate numbers with specific statistical properties based on the defined states and transition probabilities.
+Key advantages include:
+
+Ability to generate numbers with specific distributions or patterns
+Can model complex systems or sequences
+Useful for simulations and modeling real-world phenomena
+
+Would you like me to elaborate on any specific aspect of this process? For example, I could provide a simple example implementation or discuss how to design the states and transition matrix.
 `
 
 const AboutNST = () => {
