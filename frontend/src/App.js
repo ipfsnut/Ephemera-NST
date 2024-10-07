@@ -6,7 +6,7 @@ import ExperimentList from './components/ExperimentList';
 import AboutNST from './Experiments/AboutNST.js';
 import { fetchEvent } from './redux/eventSlice';
 import './components/App.css';
-import NumberSwitchingTask from './Experiments/NumberSwitchingTask.js';
+import ExperimentScreen from './components/ExperimentScreen';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -36,7 +36,7 @@ const App = () => {
           ) : currentEvent.id === '1' ? (
             <AboutNST />
           ) : currentEvent.id === '4' ? (
-            <NumberSwitchingTask />
+            <ExperimentScreen experimentType="NumberSwitchingTask" />
           ) : (
             <EventDisplay event={currentEvent} />
           )
@@ -47,4 +47,3 @@ const App = () => {
 };
 
 export default App;
-

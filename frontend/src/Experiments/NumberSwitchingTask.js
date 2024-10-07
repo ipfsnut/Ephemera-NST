@@ -10,7 +10,6 @@ import { CONFIG } from '../config/numberSwitchingConfig';
 import './NumberSwitchingTask.css';
 
 
-
 function NumberSwitchingTask() {
   const [currentTrial, setCurrentTrial] = useState(1);
   const [digits, setDigits] = useState([]);
@@ -153,15 +152,13 @@ function NumberSwitchingTask() {
   }
 
   return (
-    <div className="experiment-screen">
-      <h2>Trial {currentTrial} of {CONFIG.TOTAL_TRIALS}</h2>
-      <div className="number-display">
-        <span className="highlighted">{currentDigit}</span>
-      </div>
-      <p>Press '{CONFIG.KEYS.ODD}' for odd numbers, '{CONFIG.KEYS.EVEN}' for even numbers</p>
+    <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
+      <div className="text-9xl mb-8">{currentDigit}</div>
+      <p className="text-xl">
+        Press '{CONFIG.KEYS.ODD}' for odd numbers, '{CONFIG.KEYS.EVEN}' for even numbers
+      </p>
     </div>
   );
 }
-
 export default NumberSwitchingTask;
 
