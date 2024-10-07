@@ -3,30 +3,33 @@ import { getAllTrialData } from '../utils/indexedDB';
 import '../styles/ResultsDisplay.css';
 
 function ResultsDisplay({ db, onExport }) {
-  const [results, setResults] = useState([]);
+  const [trialData, setTrialData] = useState([]);
 
   useEffect(() => {
-    getAllTrialData(db).then(setResults).catch(console.error);
+    const fetchData = async () => {
+      const data = await getAllTrialData(db);
+      setTrialData(data);
+    };
+    fetchData();
   }, [db]);
 
+  const calculateAccuracy = (responses) => {
+    const correctResponses = responses.filter(r => r.correct).length;
+    return (correctResponses / responses.length) * 100;
+  };
+
   return (
-    <div className="results-view">
+    <div className="results-display">
       <h2>Experiment Results</h2>
-      <div className="results-summary">
-        <p>Total Trials: {results.length}</p>
-        <p>Correct Trials: {results.filter(trial => trial.allCorrect).length}</p>
-      </div>
-      <div className="results-list">
-        {results.map(trial => (
-          <div key={trial.trialNumber} className="trial-result">
-            <h3>Trial {trial.trialNumber}</h3>
-            <p>Correct: {trial.allCorrect ? 'Yes' : 'No'}</p>
-            <p>Responses: {trial.responses.filter(r => r.correct).length} / {trial.responses.length}</p>
-            {trial.imageData && <img src={trial.imageData} alt={`Trial ${trial.trialNumber}`} />}
-          </div>
-        ))}
-      </div>
-      <button onClick={onExport} className="export-button">Export Data</button>
+      {trialData.map((trial, index) => (
+        <div key={index} className="trial-result">
+          <h3>Trial {trial.trialNumber}</h3>
+          <p>Effort Level: {trial.effortLevel}</p>
+          <p>Accuracy: {calculateAccuracy(trial.responses).toFixed(2)}%</p>
+          <p>All Correct: {trial.allCorrect ? 'Yes' : 'No'}</p>
+        </div>
+      ))}
+      <button onClick={onExport}>Export Data</button>
     </div>
   );
 }

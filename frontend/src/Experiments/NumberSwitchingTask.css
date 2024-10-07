@@ -1,20 +1,18 @@
 .number-switching-task {
+  height: calc(100vh - 60px); /* Adjust 60px to match your header height */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f0f0f0;
 }
 
 .number-display {
-  font-size: 10rem;
-  font-weight: bold;
-  margin-bottom: 2rem;
+  font-size: 72px;
+  margin-bottom: 20px;
 }
 
-.instructions {
-  font-size: 1.5rem;
+.instruction-text {
+  font-size: 18px;
 }
 
 .task-complete {

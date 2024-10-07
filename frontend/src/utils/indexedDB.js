@@ -1,4 +1,4 @@
-const DB_NAME = 'EmpiricalGenericaDB';
+const DB_NAME = 'NumberSwitchingTaskDB';
 const STORE_NAME = 'trialData';
 
 export const initDB = () => {
