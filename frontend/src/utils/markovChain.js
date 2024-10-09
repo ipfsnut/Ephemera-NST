@@ -16,12 +16,14 @@ const generateMarkovNumber = (effortLevel) => {
         switches++;
       }
     }
-    number += isOdd ? (Math.floor(Math.random() * 5) * 2 + 1).toString() : (Math.floor(Math.random() * 5) * 2).toString();
+    // Modified number generation to exclude zero
+    number += isOdd ? 
+      (Math.floor(Math.random() * 5) * 2 + 1).toString() : 
+      (Math.floor(Math.random() * 4) * 2 + 2).toString();
   }
 
   return { number, effortLevel };
 };
-
 export const generateTrialNumbers = () => {
   const trialNumbers = [];
   const effortLevels = Object.keys(CONFIG.DIFFICULTY_LEVELS);

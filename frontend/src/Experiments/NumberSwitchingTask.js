@@ -22,35 +22,56 @@ function NumberSwitchingTask() {
   const [trialData, setTrialData] = useState([]);
   const [trialNumbers, setTrialNumbers] = useState([]);
   const [currentEffortLevel, setCurrentEffortLevel] = useState('');
+  const [isExperimentStarted, setIsExperimentStarted] = useState(false);
+  const [currentTrialIndex, setCurrentTrialIndex] = useState(0);
+  const [keypressCount, setKeypressCount] = useState(0);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [canRespond, setCanRespond] = useState(false);
 
   useEffect(() => {
     console.log('Initializing NumberSwitchingTask');
     initDB().then(setDB).catch(console.error);
-    initializeCamera().then(() => setCameraPermission(true)).catch(console.error);
+    initializeCamera()
+      .then(() => setCameraReady(true))
+      .catch(error => {
+        console.error('Camera initialization failed:', error);
+        setCameraReady(false);
+      });
     const generatedTrialNumbers = generateTrialNumbers();
     console.log('Generated trial numbers:', generatedTrialNumbers);
     setTrialNumbers(generatedTrialNumbers);
     return () => shutdownCamera();
   }, []);
 
-  const showNextDigit = useCallback(() => {
-    if (currentDigitIndex < CONFIG.DIGITS_PER_TRIAL) {
-      const digit = trialNumbers[currentTrial - 1].number[currentDigitIndex];
-      setCurrentDigit(digit);
-      setCurrentDigitIndex(prevIndex => prevIndex + 1);
-    } else {
-      endTrial();
+  useEffect(() => {
+    if (trialNumbers.length > 0 && !isExperimentStarted) {
+      setIsExperimentStarted(true);
+      startTrial();
     }
-  }, [currentTrial, currentDigitIndex, trialNumbers]);
+  }, [trialNumbers, isExperimentStarted]);
 
   const startTrial = useCallback(() => {
-    if (trialNumbers.length > 0) {
-      setCurrentEffortLevel(trialNumbers[currentTrial - 1].effortLevel);
+    if (currentTrialIndex < CONFIG.TOTAL_TRIALS) {
+      setCurrentEffortLevel(trialNumbers[currentTrialIndex].effortLevel);
       setCurrentDigitIndex(0);
       setResponses([]);
       showNextDigit();
+    } else {
+      setExperimentComplete(true);
     }
-  }, [currentTrial, trialNumbers, showNextDigit]);
+  }, [currentTrialIndex, trialNumbers]);
+
+  const showNextDigit = useCallback(() => {
+    if (currentDigitIndex < CONFIG.DIGITS_PER_TRIAL) {
+      const digit = trialNumbers[currentTrialIndex].number[currentDigitIndex];
+      setCurrentDigit(digit);
+      setCurrentDigitIndex(prevIndex => prevIndex + 1);
+      setCanRespond(false);
+      setTimeout(() => setCanRespond(true), CONFIG.DIGIT_DISPLAY_TIME);
+    } else {
+      endTrial();
+    }
+  }, [currentTrialIndex, currentDigitIndex, trialNumbers]);
 
   useEffect(() => {
     if (trialNumbers.length > 0) {
@@ -64,7 +85,12 @@ function NumberSwitchingTask() {
   }, [currentTrial, trialNumbers]);
 
   const handleKeyPress = useCallback((event) => {
-    if (event.key === CONFIG.KEYS.ODD || event.key === CONFIG.KEYS.EVEN) {
+    if (canRespond && (event.key === CONFIG.KEYS.ODD || event.key === CONFIG.KEYS.EVEN)) {
+      setKeypressCount(prevCount => prevCount + 1);
+      if (keypressCount % 3 === 2) {
+        queueCapture().catch(console.error);
+      }
+
       console.log('Before update - Current digit index:', currentDigitIndex);
       const isOdd = parseInt(currentDigit) % 2 !== 0;
       const isCorrect = (event.key === CONFIG.KEYS.ODD && isOdd) || (event.key === CONFIG.KEYS.EVEN && !isOdd);
@@ -80,9 +106,9 @@ function NumberSwitchingTask() {
       
       setResponses(prevResponses => [...prevResponses, newResponse]);
       
-      setTimeout(showNextDigit, CONFIG.INTER_DIGIT_DELAY);
+      showNextDigit();
     }
-  }, [currentDigit, currentDigitIndex, currentTrial, showNextDigit]);
+  }, [canRespond, currentDigit, currentDigitIndex, currentTrial, showNextDigit, keypressCount]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
@@ -113,8 +139,9 @@ function NumberSwitchingTask() {
     setTrialData(prevData => [...prevData, newTrialData]);
     await saveTrialData(db, newTrialData);
 
-    if (currentTrial < CONFIG.TOTAL_TRIALS) {
-      setCurrentTrial(prevTrial => prevTrial + 1);
+    setCurrentTrialIndex(prevIndex => prevIndex + 1);
+    if (currentTrialIndex + 1 < CONFIG.TOTAL_TRIALS) {
+      setTimeout(startTrial, CONFIG.INTER_TRIAL_DELAY);
     } else {
       setExperimentComplete(true);
     }
@@ -143,8 +170,8 @@ function NumberSwitchingTask() {
     saveAs(zipBlob, "experiment_results.zip");
   };
 
-  if (!cameraPermission) {
-    return <div>Please grant camera permission to continue with the experiment.</div>;
+  if (!cameraReady) {
+    return <div>Initializing camera. Please grant camera permissions to continue.</div>;
   }
 
   if (experimentComplete) {
@@ -153,12 +180,19 @@ function NumberSwitchingTask() {
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
-      <div className="text-9xl mb-8">{currentDigit}</div>
-      <p className="text-xl">
-        Press '{CONFIG.KEYS.ODD}' for odd numbers, '{CONFIG.KEYS.EVEN}' for even numbers
-      </p>
+      {!isExperimentStarted ? (
+        <div>Preparing experiment...</div>
+      ) : (
+        <>
+          <div className="digit-display">{currentDigit}</div>
+          <p className="text-xl">
+            Press '{CONFIG.KEYS.ODD}' for odd numbers, '{CONFIG.KEYS.EVEN}' for even numbers
+          </p>
+          <p>Trial: {currentTrialIndex + 1} / {CONFIG.TOTAL_TRIALS}</p>
+        </>
+      )}
     </div>
   );
 }
-export default NumberSwitchingTask;
 
+export default NumberSwitchingTask;

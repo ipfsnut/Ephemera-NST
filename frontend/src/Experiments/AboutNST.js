@@ -62,7 +62,6 @@ Ability to generate numbers with specific distributions or patterns
 Can model complex systems or sequences
 Useful for simulations and modeling real-world phenomena
 
-Would you like me to elaborate on any specific aspect of this process? For example, I could provide a simple example implementation or discuss how to design the states and transition matrix.
 `
 
 const AboutNST = () => {

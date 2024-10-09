@@ -34,6 +34,8 @@ const App = () => {
             <ExperimentList />
           ) : currentEvent.id === '1' ? (
             <AboutNST />
+          ) : currentEvent.id === 'nst' ? (
+            <ExperimentScreen experimentType="NumberSwitchingTask" />
           ) : (
             <EventDisplay event={currentEvent} />
           )

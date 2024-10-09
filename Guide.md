@@ -1,68 +1,40 @@
-# Number Switching Task Implementation Guide
 
-## Overview
-This guide outlines the steps to implement the Number Switching Task within our existing React application, including data collection and export functionality.
 
-## Steps
 
-1. Create Number Switching Task Module
-   - Create a new directory: `src/components/NumberSwitchingTask`
-   - Add main component file: `index.js`
-   - Create sub-components: `Instructions.js`, `TaskInterface.js`, `ResultsDisplay.js`
 
-2. Implement Redux Slice
-   - Create `src/redux/numberSwitchingSlice.js`
-   - Define initial state, actions, and reducers
-   - Include actions for starting task, recording responses, and ending task
+## Markov Chain Number Generator
+The markovChain.js file is a sophisticated number generator designed specifically for the Number Switching Task experiment. Here's a detailed explanation of its functionality:
 
-3. Update Main Store
-   - Modify `src/redux/store.js` to include the new numberSwitchingSlice
+The file exports two main functions: generateMarkovNumber and generateTrialNumbers.
 
-4. Implement Camera Functionality
-   - Create `src/utils/camera.js` for camera-related functions
-   - Implement function to capture image every 3-5 key presses
+generateMarkovNumber creates a single trial number based on a given effort level. It uses the CONFIG object to determine the minimum and maximum number of switches for that effort level. It then generates a string of digits, alternating between odd and even numbers based on a calculated switch probability. This ensures that the number of switches in the generated number falls within the specified range for the given effort level.
 
-5. Create Data Storage Utility
-   - Add `src/utils/dataStorage.js`
-   - Implement functions to store task data and images locally
+generateTrialNumbers creates a full set of trial numbers for the experiment. It distributes effort levels evenly across all trials, generates a number for each trial using generateMarkovNumber, and then shuffles the order of the trials to prevent predictability.
 
-6. Develop Export Functionality
-   - Create `src/utils/exportData.js`
-   - Implement function to generate ZIP file with CSV and JPG images
+The Markov chain aspect comes into play in how each digit influences the probability of the next digit. The isOdd boolean acts as the "state" in the Markov chain, determining whether the next digit will be odd or even.
 
-7. Update Routing
-   - Modify `src/App.js` to include route for Number Switching Task
+The randomness in this system comes from several sources:
 
-8. Integrate with Event Structure
-   - Update `src/components/EventDetail.js` to link to Number Switching Task
+The initial odd/even state is randomly chosen.
+The exact number of switches within the min-max range is randomly determined.
+The specific digit within the odd or even category is randomly selected.
+The final order of trials is randomly shuffled.
+Users can be confident in the randomness of the generated numbers because:
 
-9. Implement Main Task Logic
-   - In `src/components/NumberSwitchingTask/index.js`:
-     - Set up task states and timers
-     - Implement logic for switching between number types
-     - Handle user input and score calculation
+Multiple layers of randomization are employed.
+The system uses JavaScript's built-in Math.random() function, which provides a high-quality source of randomness.
+The algorithm ensures a balance between randomness and controlled difficulty progression through the effort levels.
+While not cryptographically secure, this method provides more than sufficient randomness for the purposes of a psychological experiment, ensuring unpredictability for participants while maintaining experimental control.
 
-10. Create User Interface
-    - Design and implement UI components in respective files
-    - Ensure responsive design for various screen sizes
 
-11. Connect Redux and Components
-    - Use `useSelector` and `useDispatch` in components to interact with Redux store
 
-12. Implement Data Collection
-    - Integrate camera capture with key presses
-    - Store task data and images using storage utility
 
-13. Add Export Option
-    - Create export button in `ResultsDisplay.js`
-    - Connect export functionality to generate and download ZIP file
+## Performance Optimization
+The process to make the task more responsive involves several key steps:
 
-14. Testing and Refinement
-    - Conduct thorough testing of all components and functionalities
-    - Refine user experience based on test results
-
-## Key Considerations
-- Ensure smooth integration with existing event structure
-- Optimize performance for simultaneous task running and image capture
-- Implement secure local storage for task data and images
-- Design intuitive user interface for task instructions and execution
+Optimize state management by using useRef for values that don't need to trigger re-renders.
+Streamline the key press handler to reduce unnecessary computations.
+Implement a debounce mechanism to prevent accidental double inputs.
+Ensure that state updates are batched efficiently to minimize render cycles.
+Refactor the showNextDigit function to be more performant.
+This approach will significantly improve the responsiveness of the experiment, ensuring that each key press is registered accurately and promptly. The result will be a smoother, more fluid user experience where participants can progress through the task without any perceived lag or need for repeated inputs.

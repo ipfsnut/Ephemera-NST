@@ -20,3 +20,9 @@
   text-align: center;
   padding-top: 40vh;
 }
+
+.digit-display {
+  font-size: 20rem;  /* This makes the digit very large */
+  font-weight: bold;
+  text-align: center;
+}
