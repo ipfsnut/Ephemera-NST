@@ -8,6 +8,8 @@ import { saveAs } from 'file-saver';
 import { generateTrialNumbers } from '../utils/markovChain';
 import { CONFIG } from '../config/numberSwitchingConfig';
 import './NumberSwitchingTask.css';
+import ImageDebugger from '../components/ImageDebugger';
+
 
 
 function NumberSwitchingTask() {
@@ -27,7 +29,7 @@ function NumberSwitchingTask() {
   const [keypressCount, setKeypressCount] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [canRespond, setCanRespond] = useState(false);
-
+  const [lastCaptureTime, setLastCaptureTime] = useState(null);
   useEffect(() => {
     console.log('Initializing NumberSwitchingTask');
     initDB().then(setDB).catch(console.error);
@@ -55,12 +57,12 @@ function NumberSwitchingTask() {
       setCurrentEffortLevel(trialNumbers[currentTrialIndex].effortLevel);
       setCurrentDigitIndex(0);
       setResponses([]);
-      showNextDigit();
+      setCapturedImages([]);
+      showNextDigit(); // This will show the first digit immediately
     } else {
       setExperimentComplete(true);
     }
   }, [currentTrialIndex, trialNumbers]);
-
   const showNextDigit = useCallback(() => {
     if (currentDigitIndex < CONFIG.DIGITS_PER_TRIAL) {
       const digit = trialNumbers[currentTrialIndex].number[currentDigitIndex];
@@ -84,11 +86,17 @@ function NumberSwitchingTask() {
     }
   }, [currentTrial, trialNumbers]);
 
+  const [capturedImages, setCapturedImages] = useState([]);
+
   const handleKeyPress = useCallback((event) => {
     if (canRespond && (event.key === CONFIG.KEYS.ODD || event.key === CONFIG.KEYS.EVEN)) {
       setKeypressCount(prevCount => prevCount + 1);
       if (keypressCount % 3 === 2) {
-        queueCapture().catch(console.error);
+        queueCapture()
+          .then(imageBlob => {
+            setCapturedImages(prev => [...prev, imageBlob]);
+          })
+          .catch(console.error);
       }
 
       console.log('Before update - Current digit index:', currentDigitIndex);
@@ -114,30 +122,22 @@ function NumberSwitchingTask() {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleKeyPress]);
-
+  
   const endTrial = async () => {
     console.log('Ending trial', currentTrial);
     const allCorrect = responses.every(response => response.correct);
-    let imageBlob = null;
-
-    if (allCorrect) {
-      try {
-        imageBlob = await queueCapture();
-      } catch (error) {
-        console.error('Failed to take picture:', error);
-      }
-    }
 
     const newTrialData = {
       trialNumber: currentTrial,
       responses: responses,
       allCorrect: allCorrect,
-      imageBlob: imageBlob,
+      images: capturedImages,
       effortLevel: currentEffortLevel
     };
 
     setTrialData(prevData => [...prevData, newTrialData]);
     await saveTrialData(db, newTrialData);
+    console.log('Trial data saved:', newTrialData);
 
     setCurrentTrialIndex(prevIndex => prevIndex + 1);
     if (currentTrialIndex + 1 < CONFIG.TOTAL_TRIALS) {
@@ -145,6 +145,7 @@ function NumberSwitchingTask() {
     } else {
       setExperimentComplete(true);
     }
+  
   };
 
   const exportData = async () => {
@@ -167,9 +168,9 @@ function NumberSwitchingTask() {
     zip.file("experiment_data.csv", csvContent);
 
     const zipBlob = await zip.generateAsync({type: "blob"});
+    console.log('Zip file created:', zipBlob);
     saveAs(zipBlob, "experiment_results.zip");
   };
-
   if (!cameraReady) {
     return <div>Initializing camera. Please grant camera permissions to continue.</div>;
   }
@@ -193,6 +194,8 @@ function NumberSwitchingTask() {
       )}
     </div>
   );
-}
+};
 
 export default NumberSwitchingTask;
+
+

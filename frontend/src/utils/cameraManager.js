@@ -1,41 +1,46 @@
-let stream = null;
-let imageCapture = null;
-const captureQueue = [];
-let isProcessing = false;
+let videoStream = null;
+let videoElement = null;
 
 export const initializeCamera = async () => {
-  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-  const track = stream.getVideoTracks()[0];
-  imageCapture = new ImageCapture(track);
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    videoElement = document.createElement('video');
+    videoElement.srcObject = videoStream;
+    await videoElement.play();
+    return true;
+  } catch (error) {
+    console.error('Camera initialization failed:', error);
+    return false;
+  }
 };
 
-export const queueCapture = () => {
+export const captureImage = () => {
   return new Promise((resolve, reject) => {
-    captureQueue.push({ resolve, reject });
-    processQueue();
+    if (!videoElement) {
+      reject(new Error('Camera not initialized'));
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    canvas.getContext('2d').drawImage(videoElement, 0, 0);
+    
+    canvas.toBlob(resolve, 'image/jpeg');
   });
 };
 
-const processQueue = async () => {
-  if (isProcessing || captureQueue.length === 0) return;
-  isProcessing = true;
-
-  const { resolve, reject } = captureQueue.shift();
-  try {
-    const blob = await imageCapture.takePhoto();
-    resolve(blob);
-  } catch (error) {
-    reject(error);
-  } finally {
-    isProcessing = false;
-    processQueue();
-  }
+export const queueCapture = async () => {
+  console.log('Queuing image capture...');
+  const imageBlob = await captureImage();
+  console.log('Image captured, blob size:', imageBlob.size);
+  return imageBlob;
 };
 
 export const shutdownCamera = () => {
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
+  if (videoStream) {
+    videoStream.getTracks().forEach(track => track.stop());
+    videoStream = null;
   }
-  stream = null;
-  imageCapture = null;
+  videoElement = null;
 };
