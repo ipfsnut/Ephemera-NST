@@ -9,16 +9,17 @@
     "start:backend": "cd backend && node src/server.js",
     "install": "concurrently \"cd frontend && npm install\" \"cd backend && npm install\"",
     "build": "concurrently \"cd frontend && npm run build\" \"cd backend && npm run build\""
-
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^6.2.0",
+    "css-loader": "^7.1.2",
     "postcss": "^8.4.47",
     "postcss-loader": "^8.1.1",
     "postcss-preset-env": "^10.0.6",
+    "style-loader": "^4.0.0",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4"
   }
