@@ -3,10 +3,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import EventButton from './components/EventButton';
 import EventDisplay from './components/EventDisplay';
 import ExperimentList from './components/ExperimentList';
-import AboutNST from './Experiments/AboutNST.js';
+import AboutNST from './Experiments/NumberSwitchingTask/AboutNST';
 import { fetchEvent } from './redux/eventSlice';
 import './components/App.css';
 import ExperimentScreen from './components/ExperimentScreen';
+import ConfigScreen from './components/ConfigScreen';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -36,6 +37,8 @@ const App = () => {
             <AboutNST />
           ) : currentEvent.id === 'nst' ? (
             <ExperimentScreen experimentType="NumberSwitchingTask" />
+          ) : currentEvent.id === 'config' ? (
+            <ConfigScreen />
           ) : (
             <EventDisplay event={currentEvent} />
           )

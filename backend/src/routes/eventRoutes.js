@@ -6,6 +6,8 @@ const events = {
   '2': { id: '2', name: 'Experiment List', description: 'List of available experiments' },
   '3': { id: '3', name: 'Literature', description: 'Papers and research findings' },
   'nst': { id: 'nst', name: 'Number Switching Task', description: 'Cognitive flexibility experiment' },
+  'aboutNST': { id: 'aboutNST', name: 'About NST', description: 'Information about the Number Switching Task' },
+  'config': { id: 'config', name: 'Configure Experiment', description: 'Set up experiment parameters' },  
 };
 
 router.get('/:id', (req, res) => {

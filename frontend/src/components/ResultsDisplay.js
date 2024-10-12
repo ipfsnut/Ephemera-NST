@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getAllTrialData } from '../utils/indexedDB';
-import '../styles/ResultsDisplay.css';
 
 function ResultsDisplay({ db, onExport }) {
   const [trialData, setTrialData] = useState([]);

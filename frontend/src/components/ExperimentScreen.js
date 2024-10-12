@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import NumberSwitchingTask from '../Experiments/NumberSwitchingTask';
+import NumberSwitchingTask from '../Experiments/NumberSwitchingTask/NumberSwitchingTask';
 
 function ExperimentScreen({ experimentType }) {
   const [experiment, setExperiment] = useState(null);

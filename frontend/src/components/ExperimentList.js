@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchEvent } from '../redux/eventSlice';
+import './ExperimentList.css';
 
 const ExperimentList = () => {
   const dispatch = useDispatch();
@@ -14,9 +15,18 @@ const ExperimentList = () => {
       <h2>Available Experiments</h2>
       <ul>
         <li>
-          <button onClick={() => handleStartExperiment('nst')}>
-            Start Number Switching Task
-          </button>
+          <h3 className="experiment-title">Number Switching Task</h3>
+          <div className="button-group">
+            <button onClick={() => handleStartExperiment('aboutNST')}>
+              About
+            </button>
+            <button onClick={() => handleStartExperiment('config')}>
+              Custom Experiment
+            </button>
+            <button onClick={() => handleStartExperiment('nst')}>
+              Standard Experiment
+            </button>
+          </div>
         </li>
         {/* Add more experiment options here as needed */}
       </ul>

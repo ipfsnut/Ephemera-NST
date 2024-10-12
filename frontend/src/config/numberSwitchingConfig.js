@@ -1,6 +1,5 @@
 export const CONFIG = {
     TOTAL_TRIALS: 1,
-    DIGITS_PER_TRIAL: 15,
     DIFFICULTY_LEVELS: {
       1: { min: 1, max: 2 },
       2: { min: 3, max: 4 },
