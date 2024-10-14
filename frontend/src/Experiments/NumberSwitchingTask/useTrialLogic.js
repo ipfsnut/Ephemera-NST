@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { generateTrials, processTrialResponse } from './trialUtils';
-import { CONFIG } from '../../config/numberSwitchingConfig';
+import { generateTrials } from './trialUtils';
 
 const EXPERIMENT_STATES = {
   INITIALIZING: 'INITIALIZING',
@@ -22,51 +21,61 @@ export const useTrialLogic = () => {
   const [responses, setResponses] = useState([]);
 
   useEffect(() => {
+    console.log('Generating trials');
     const generatedTrials = generateTrials(config);
     setTrials(generatedTrials);
     setExperimentState(EXPERIMENT_STATES.READY);
+    console.log('Trials generated, experiment ready');
   }, [config]);
 
-  const startExperiment = useCallback(() => {
-    if (experimentState === EXPERIMENT_STATES.READY) {
-      setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+  useEffect(() => {
+    if (experimentState === EXPERIMENT_STATES.SHOWING_DIGIT && trials.length > 0) {
+      showNextDigit();
     }
-  }, [experimentState]);
+  }, [experimentState, trials, showNextDigit]);
+
+  const startExperiment = useCallback(() => {
+    console.log('Starting experiment');
+    setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+  }, []);
 
   const showNextDigit = useCallback(() => {
-    if (currentTrialIndex < trials.length && currentDigitIndex < 15) {
-      setCurrentDigit(trials[currentTrialIndex].digits[currentDigitIndex]);
-      setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE);
-    } else if (currentTrialIndex < trials.length) {
-      setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE);
-    } else {
+    console.log('Showing next digit, indices:', currentTrialIndex, currentDigitIndex);
+    if (trials.length > 0 && trials[currentTrialIndex] && trials[currentTrialIndex].digits) {
+      if (currentDigitIndex < trials[currentTrialIndex].digits.length) {
+        const digit = trials[currentTrialIndex].digits[currentDigitIndex];
+        console.log(`Setting current digit: ${digit}`);
+        setCurrentDigit(digit);
+        setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE);
+      } else {
+        console.log('Trial complete');
+        setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE);
+      }
+    } else if (currentTrialIndex >= trials.length) {
+      console.log('Experiment complete');
       setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE);
+    } else {
+      console.log('Waiting for trials to be generated');
     }
   }, [currentTrialIndex, currentDigitIndex, trials]);
-
-  const handleResponse = useCallback((response) => {
-    if (experimentState === EXPERIMENT_STATES.AWAITING_RESPONSE) {
-      const newResponse = processTrialResponse(currentDigit, response, CONFIG.KEYS);
-      setResponses(prevResponses => [...prevResponses, newResponse]);
-      setCurrentDigitIndex(prevIndex => prevIndex + 1);
-      setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
-    }
-  }, [experimentState, currentDigit]);
-
+  
+  
   const moveToNextTrial = useCallback(() => {
+    console.log('Moving to next trial');
     setCurrentTrialIndex(prevIndex => prevIndex + 1);
     setCurrentDigitIndex(0);
     setResponses([]);
     setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
-  }, []);
+    showNextDigit(); // Call showNextDigit when moving to the next trial
+  }, [showNextDigit]);
 
-  useEffect(() => {
-    if (experimentState === EXPERIMENT_STATES.SHOWING_DIGIT) {
-      showNextDigit();
-    } else if (experimentState === EXPERIMENT_STATES.TRIAL_COMPLETE) {
-      moveToNextTrial();
-    }
-  }, [experimentState, showNextDigit, moveToNextTrial]);
+  const handleResponse = useCallback((response) => {
+    console.log(`Handling response: ${response}`);
+    setResponses(prevResponses => [...prevResponses, response]);
+    setCurrentDigitIndex(prevIndex => prevIndex + 1);
+    setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+    showNextDigit(); // Call showNextDigit after handling the response
+  }, [showNextDigit]);
 
   return {
     experimentState,

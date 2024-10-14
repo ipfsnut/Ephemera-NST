@@ -1,7 +1,9 @@
 import React from 'react';
-import { CONFIG } from '../../config/numberSwitchingConfig';
+import { useSelector } from 'react-redux';
 
 const TrialDisplay = ({ currentDigit, currentTrialIndex, totalTrials, experimentState }) => {
+  const config = useSelector(state => state.config);
+
   const renderContent = () => {
     switch (experimentState) {
       case 'SHOWING_DIGIT':
@@ -10,7 +12,7 @@ const TrialDisplay = ({ currentDigit, currentTrialIndex, totalTrials, experiment
           <>
             <div className="digit-display text-6xl font-bold mb-4">{currentDigit}</div>
             <p className="text-xl mb-2">
-              Press '{CONFIG.KEYS.ODD}' for odd numbers, '{CONFIG.KEYS.EVEN}' for even numbers
+              Press '{config.KEYS.ODD}' for odd numbers, '{config.KEYS.EVEN}' for even numbers
             </p>
           </>
         );

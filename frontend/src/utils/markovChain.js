@@ -1,11 +1,9 @@
-import { CONFIG } from '../config/numberSwitchingConfig';
-
 const DIGITS_PER_TRIAL = 15;  // Fixed value
 
-const generateMarkovNumber = (effortLevel) => {
+const generateMarkovNumber = (effortLevel, config) => {
   console.log('DIGITS_PER_TRIAL:', DIGITS_PER_TRIAL);
   console.log('Generating number for effort level:', effortLevel);
-  const { min, max } = CONFIG.DIFFICULTY_LEVELS[effortLevel];
+  const { min, max } = config.DIFFICULTY_LEVELS[effortLevel];
   console.log('Min-Max switches:', min, max);
   const targetSwitches = Math.floor(Math.random() * (max - min + 1)) + min;
   console.log('Target switches:', targetSwitches);
@@ -36,14 +34,14 @@ const generateMarkovNumber = (effortLevel) => {
   return { number, effortLevel };
 };
 
-export const generateTrialNumbers = () => {
+export const generateTrialNumbers = (config) => {
   const trialNumbers = [];
-  const effortLevels = Object.keys(CONFIG.DIFFICULTY_LEVELS);
+  const effortLevels = Object.keys(config.DIFFICULTY_LEVELS);
   
-  for (let i = 0; i < CONFIG.TOTAL_TRIALS; i++) {
-    const level = effortLevels[Math.floor(i / (CONFIG.TOTAL_TRIALS / effortLevels.length))];
-    console.log('Generated Markov number:', generateMarkovNumber(level));
-    trialNumbers.push(generateMarkovNumber(level));
+  for (let i = 0; i < config.numTrials; i++) {
+    const level = effortLevels[Math.floor(i / (config.numTrials / effortLevels.length))];
+    console.log('Generated Markov number:', generateMarkovNumber(level, config));
+    trialNumbers.push(generateMarkovNumber(level, config));
   }
   
   // Shuffle the trial numbers

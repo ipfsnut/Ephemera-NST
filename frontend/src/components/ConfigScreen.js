@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateConfig } from '../redux/configSlice';
-import { CONFIG } from '../config/numberSwitchingConfig';
 
 const ConfigScreen = () => {
   const dispatch = useDispatch();
-  const currentConfig = useSelector(state => state.config);
-  const [numTrials, setNumTrials] = useState(currentConfig.numTrials || 14);
-  const [difficultyLevel, setDifficultyLevel] = useState(currentConfig.difficultyLevel || '1');
+  const config = useSelector(state => state.config);
+  const [numTrials, setNumTrials] = useState(config.numTrials);
+  const [difficultyLevel, setDifficultyLevel] = useState(config.difficultyLevels[0]);
 
   const handleCustomSubmit = (e) => {
     e.preventDefault();
@@ -45,9 +44,9 @@ const ConfigScreen = () => {
             onChange={(e) => setDifficultyLevel(e.target.value)}
           >
             <option value="all">All Levels (Random)</option>
-            {Object.keys(CONFIG.DIFFICULTY_LEVELS).map(level => (
+            {Object.keys(config.DIFFICULTY_LEVELS).map(level => (
               <option key={level} value={level}>
-                Level {level} ({CONFIG.DIFFICULTY_LEVELS[level].min}-{CONFIG.DIFFICULTY_LEVELS[level].max} switches)
+                Level {level} ({config.DIFFICULTY_LEVELS[level].min}-{config.DIFFICULTY_LEVELS[level].max} switches)
               </option>
             ))}
           </select>

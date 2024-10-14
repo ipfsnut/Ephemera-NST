@@ -1,36 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getAllTrialData } from '../utils/indexedDB';
 
-function ResultsDisplay({ db, onExport }) {
-  const [trialData, setTrialData] = useState([]);
+const ResultsDisplay = ({ db }) => {
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const data = await getAllTrialData(db);
-      setTrialData(data);
-    };
-    fetchData();
+    if (db) {
+      getAllTrialData(db)
+        .then(data => {
+          setResults(data);
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error('Error fetching results:', error);
+          setLoading(false);
+        });
+    }
   }, [db]);
 
-  const calculateAccuracy = (responses) => {
-    const correctResponses = responses.filter(r => r.correct).length;
-    return (correctResponses / responses.length) * 100;
-  };
+  if (loading) {
+    return <div>Loading results...</div>;
+  }
 
+  // Render your results here
   return (
-    <div className="results-display">
+    <div>
       <h2>Experiment Results</h2>
-      {trialData.map((trial, index) => (
-        <div key={index} className="trial-result">
-          <h3>Trial {trial.trialNumber}</h3>
-          <p>Effort Level: {trial.effortLevel}</p>
-          <p>Accuracy: {calculateAccuracy(trial.responses).toFixed(2)}%</p>
-          <p>All Correct: {trial.allCorrect ? 'Yes' : 'No'}</p>
-        </div>
-      ))}
-      <button onClick={onExport}>Export Data</button>
+      {/* Display your results data here */}
     </div>
   );
-}
+};
 
 export default ResultsDisplay;
