@@ -15,21 +15,32 @@ export const initializeCamera = async () => {
 };
 
 export const captureImage = () => {
+  console.log('captureImage function called');
   return new Promise((resolve, reject) => {
     if (!videoElement) {
+      console.error('Camera not initialized');
       reject(new Error('Camera not initialized'));
       return;
     }
 
+    console.log('Creating canvas for image capture');
     const canvas = document.createElement('canvas');
     canvas.width = videoElement.videoWidth;
     canvas.height = videoElement.videoHeight;
     canvas.getContext('2d').drawImage(videoElement, 0, 0);
     
-    canvas.toBlob(resolve, 'image/jpeg');
+    console.log('Converting canvas to blob');
+    canvas.toBlob(blob => {
+      if (blob) {
+        console.log('Image captured successfully, blob size:', blob.size);
+        resolve(blob);
+      } else {
+        console.error('Failed to create image blob');
+        reject(new Error('Failed to create image blob'));
+      }
+    }, 'image/jpeg');
   });
 };
-
 export const queueCapture = async () => {
   console.log('Queuing image capture...');
   const imageBlob = await captureImage();

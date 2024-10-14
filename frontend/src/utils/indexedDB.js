@@ -34,6 +34,11 @@ export const getAllTrialData = (db) => {
     const request = store.getAll();
 
     request.onerror = (event) => reject("Read error: " + event.target.error);
-    request.onsuccess = (event) => resolve(event.target.result);
+    request.onsuccess = (event) => {
+      const results = event.target.result;
+      console.log('Retrieved trial data:', results);
+      resolve(results);
+    };
   });
+
 };

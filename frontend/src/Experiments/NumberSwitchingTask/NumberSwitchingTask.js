@@ -7,6 +7,8 @@ import { processTrialResponse } from './trialUtils';
 import { initializeCamera, captureImage, shutdownCamera } from '../../utils/cameraManager';
 import ResultsDownloader from './ResultsDownloader';
 import { initDB, saveTrialData, getAllTrialData } from '../../utils/indexedDB';
+import { createAndDownloadZip } from '../../utils/zipCreator';
+
 
 
 
@@ -28,7 +30,6 @@ function NumberSwitchingTask() {
   const [db, setDB] = React.useState(null);
   const [keypressCount, setKeypressCount] = useState(0);
   const [downloadFunction, setDownloadFunction] = useState(null);
-
   useEffect(() => {
     initDB().then(setDB).catch(console.error);
   }, []);
@@ -41,26 +42,37 @@ function NumberSwitchingTask() {
     return () => shutdownCamera();
   }, []);
 
-  const handleResponse = useCallback((response) => {
+  const handleResponse = useCallback(async (response) => {
     if (experimentState === 'AWAITING_RESPONSE') {
       setKeypressCount(prevCount => {
         const newCount = prevCount + 1;
+        console.log('Keypress count:', newCount);
         if (newCount % 5 === 0) {
-          captureImage();
-          console.log('Captured image at keypress count:', newCount);
+          console.log('Attempting to capture image');
+          captureImage().then(blob => {
+            console.log('Image captured, blob size:', blob.size);
+            saveTrialData(db, {
+              trialNumber: `${currentTrialIndex}-${responses.length + 1}`,
+              trialIndex: currentTrialIndex,
+              responses: [...responses, newResponse],
+              imageBlob: blob
+            }).catch(error => console.error('Error saving trial data with image:', error));
+          }).catch(error => console.error('Error capturing image:', error));
         }
         return newCount;
       });
 
       const newResponse = processTrialResponse(currentDigit, response, config.KEYS);
       const updatedResponses = [...responses, newResponse];
+      
       if (db) {
-        saveTrialData(db, {
+        await saveTrialData(db, {
           trialNumber: `${currentTrialIndex}-${updatedResponses.length}`,
           trialIndex: currentTrialIndex,
           responses: updatedResponses
-        }).catch(console.error);
+        }).catch(error => console.error('Error saving trial data:', error));
       }
+
       showNextDigit();
     }
   }, [experimentState, currentDigit, config.KEYS, responses, db, currentTrialIndex, showNextDigit]);

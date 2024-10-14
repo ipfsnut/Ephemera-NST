@@ -5,8 +5,8 @@ export const createAndDownloadZip = async (trialData) => {
   const zip = new JSZip();
   let csvContent = "Trial Number,Effort Level,All Correct,Image Name,Responses\n";
 
-  trialData.forEach((trial) => {
-    const imageName = trial.imageBlob ? `Image${trial.trialNumber}.${trial.effortLevel}.jpg` : 'No Image';
+  trialData.forEach((trial, index) => {
+    const imageName = trial.imageBlob ? `Image${index + 1}.jpg` : 'No Image';
     csvContent += `${trial.trialNumber},${trial.effortLevel},${trial.allCorrect},${imageName},`;
     csvContent += trial.responses.map(r => `${r.digit}:${r.response}:${r.correct}`).join('|');
     csvContent += "\n";
