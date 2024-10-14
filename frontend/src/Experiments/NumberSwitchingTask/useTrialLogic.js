@@ -40,24 +40,40 @@ export const useTrialLogic = () => {
   }, []);
 
   const showNextDigit = useCallback(() => {
-    console.log('Showing next digit, indices:', currentTrialIndex, currentDigitIndex);
-    if (trials.length > 0 && trials[currentTrialIndex] && trials[currentTrialIndex].digits) {
-      if (currentDigitIndex < trials[currentTrialIndex].digits.length) {
-        const digit = trials[currentTrialIndex].digits[currentDigitIndex];
-        console.log(`Setting current digit: ${digit}`);
-        setCurrentDigit(digit);
-        setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE);
-      } else {
-        console.log('Trial complete');
-        setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE);
-      }
-    } else if (currentTrialIndex >= trials.length) {
-      console.log('Experiment complete');
+    console.log('showNextDigit called', { currentTrialIndex, currentDigitIndex, trialsLength: trials.length });
+
+    if (currentTrialIndex >= trials.length) {
+      console.log('All trials complete');
       setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE);
-    } else {
-      console.log('Waiting for trials to be generated');
+      return;
     }
-  }, [currentTrialIndex, currentDigitIndex, trials]);
+
+    const currentTrial = trials[currentTrialIndex];
+    console.log('Current trial', currentTrial);
+
+    if (!currentTrial || !currentTrial.number) {
+      console.log('Invalid trial data');
+      return;
+    }
+
+    const digits = currentTrial.number.split('');
+
+    if (currentDigitIndex < digits.length) {
+      const digit = digits[currentDigitIndex];
+      console.log(`Setting current digit: ${digit}`);
+      setCurrentDigit(digit);
+      setCurrentDigitIndex(prevIndex => prevIndex + 1);
+      setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE);
+    } else {
+      console.log('Trial complete');
+      setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE);
+      setTimeout(() => {
+        setCurrentTrialIndex(prevIndex => prevIndex + 1);
+        setCurrentDigitIndex(0);
+        setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+      }, 1000); // 1 second delay before next trial
+    }
+  }, [currentTrialIndex, currentDigitIndex, trials, setCurrentDigit, setCurrentDigitIndex, setCurrentTrialIndex, setExperimentState]);
   
   
   const moveToNextTrial = useCallback(() => {
@@ -66,6 +82,8 @@ export const useTrialLogic = () => {
     setCurrentDigitIndex(0);
     setResponses([]);
     setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+    console.log(`Experiment state changed to: ${experimentState}`);
+
     showNextDigit(); // Call showNextDigit when moving to the next trial
   }, [showNextDigit]);
 
@@ -74,6 +92,7 @@ export const useTrialLogic = () => {
     setResponses(prevResponses => [...prevResponses, response]);
     setCurrentDigitIndex(prevIndex => prevIndex + 1);
     setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+    console.log(`Experiment state changed to: ${experimentState}`);
     showNextDigit(); // Call showNextDigit after handling the response
   }, [showNextDigit]);
 
@@ -81,6 +100,7 @@ export const useTrialLogic = () => {
     experimentState,
     currentTrialIndex,
     currentDigit,
+    showNextDigit,
     responses,
     startExperiment,
     handleResponse,

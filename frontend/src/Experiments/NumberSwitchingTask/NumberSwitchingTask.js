@@ -14,6 +14,7 @@ function NumberSwitchingTask() {
     currentDigit,
     responses,
     startExperiment,
+    showNextDigit,
     setResponses,
     setCurrentDigitIndex,
     setExperimentState,
@@ -29,20 +30,17 @@ function NumberSwitchingTask() {
   const handleResponse = useCallback((response) => {
     if (experimentState === 'AWAITING_RESPONSE') {
       const newResponse = processTrialResponse(currentDigit, response, config.KEYS);
-      setResponses(prevResponses => {
-        const updatedResponses = [...prevResponses, newResponse];
-        if (db) {
-          saveTrialData(db, {
-            trialIndex: currentTrialIndex,
-            responses: updatedResponses
-          }).catch(console.error);
-        }
-        return updatedResponses;
-      });
-      setCurrentDigitIndex(prevIndex => prevIndex + 1);
-      setExperimentState('SHOWING_DIGIT');
+      const updatedResponses = [...responses, newResponse];
+      if (db) {
+        saveTrialData(db, {
+          trialNumber: `${currentTrialIndex}-${updatedResponses.length}`,
+          trialIndex: currentTrialIndex,
+          responses: updatedResponses
+        }).catch(console.error);
+      }
+      showNextDigit();
     }
-  }, [experimentState, currentDigit, config.KEYS, setResponses, setCurrentDigitIndex, setExperimentState, db, currentTrialIndex]);
+  }, [experimentState, currentDigit, config.KEYS, responses, db, currentTrialIndex, showNextDigit]);
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -54,6 +52,13 @@ function NumberSwitchingTask() {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleResponse, config.KEYS]);
+
+  useEffect(() => {
+    if (experimentState === 'SHOWING_DIGIT') {
+      showNextDigit();
+    }
+  }, [experimentState, showNextDigit]);
+  
 
   useEffect(() => {
     if (experimentState === 'READY') {

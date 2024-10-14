@@ -2,6 +2,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 const TrialDisplay = ({ currentDigit, currentTrialIndex, totalTrials, experimentState }) => {
+  console.log('TrialDisplay render:', { currentDigit, currentTrialIndex, totalTrials, experimentState });
+
   const config = useSelector(state => state.config);
 
   const renderContent = () => {
