@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import './AboutNST.css';
 
 const AboutNSTContent = `
 # About the Number Switching Task

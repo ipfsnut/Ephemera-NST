@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateConfig } from '../redux/configSlice';
 import { CONFIG } from '../config/numberSwitchingConfig';
-import './ConfigScreen.css';
 
 const ConfigScreen = () => {
   const dispatch = useDispatch();
   const currentConfig = useSelector(state => state.config);
-  const [numTrials, setNumTrials] = useState(currentConfig.numTrials || CONFIG.TOTAL_TRIALS);
+  const [numTrials, setNumTrials] = useState(currentConfig.numTrials || 14);
   const [difficultyLevel, setDifficultyLevel] = useState(currentConfig.difficultyLevel || '1');
 
   const handleCustomSubmit = (e) => {

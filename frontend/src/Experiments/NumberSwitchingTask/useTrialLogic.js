@@ -34,12 +34,13 @@ export const useTrialLogic = () => {
   }, [experimentState]);
 
   const showNextDigit = useCallback(() => {
-    if (currentDigitIndex < 15) {
-      setCurrentDigit(trials[currentTrialIndex].number[currentDigitIndex]);
-      setCurrentDigitIndex(prevIndex => prevIndex + 1);
+    if (currentTrialIndex < trials.length && currentDigitIndex < 15) {
+      setCurrentDigit(trials[currentTrialIndex].digits[currentDigitIndex]);
       setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE);
-    } else {
+    } else if (currentTrialIndex < trials.length) {
       setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE);
+    } else {
+      setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE);
     }
   }, [currentTrialIndex, currentDigitIndex, trials]);
 
@@ -47,31 +48,23 @@ export const useTrialLogic = () => {
     if (experimentState === EXPERIMENT_STATES.AWAITING_RESPONSE) {
       const newResponse = processTrialResponse(currentDigit, response, CONFIG.KEYS);
       setResponses(prevResponses => [...prevResponses, newResponse]);
+      setCurrentDigitIndex(prevIndex => prevIndex + 1);
       setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
     }
   }, [experimentState, currentDigit]);
 
   const moveToNextTrial = useCallback(() => {
-    if (currentTrialIndex + 1 < trials.length) {
-      setCurrentTrialIndex(prevIndex => prevIndex + 1);
-      setCurrentDigitIndex(0);
-      setResponses([]);
-      setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
-    } else {
-      setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE);
-    }
-  }, [currentTrialIndex, trials]);
+    setCurrentTrialIndex(prevIndex => prevIndex + 1);
+    setCurrentDigitIndex(0);
+    setResponses([]);
+    setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+  }, []);
 
   useEffect(() => {
-    switch (experimentState) {
-      case EXPERIMENT_STATES.SHOWING_DIGIT:
-        showNextDigit();
-        break;
-      case EXPERIMENT_STATES.TRIAL_COMPLETE:
-        moveToNextTrial();
-        break;
-      default:
-        break;
+    if (experimentState === EXPERIMENT_STATES.SHOWING_DIGIT) {
+      showNextDigit();
+    } else if (experimentState === EXPERIMENT_STATES.TRIAL_COMPLETE) {
+      moveToNextTrial();
     }
   }, [experimentState, showNextDigit, moveToNextTrial]);
 

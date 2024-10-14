@@ -1,7 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchEvent } from '../redux/eventSlice';
-import './ExperimentList.css';
 
 const ExperimentList = () => {
   const dispatch = useDispatch();

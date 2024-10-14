@@ -5,7 +5,6 @@ import EventDisplay from './components/EventDisplay';
 import ExperimentList from './components/ExperimentList';
 import AboutNST from './Experiments/NumberSwitchingTask/AboutNST';
 import { fetchEvent } from './redux/eventSlice';
-import './components/App.css';
 import ExperimentScreen from './components/ExperimentScreen';
 import ConfigScreen from './components/ConfigScreen';
 

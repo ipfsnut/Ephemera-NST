@@ -1,5 +1,4 @@
 export const CONFIG = {
-    TOTAL_TRIALS: 1,
     DIFFICULTY_LEVELS: {
       1: { min: 1, max: 2 },
       2: { min: 3, max: 4 },
@@ -13,5 +12,5 @@ export const CONFIG = {
       ODD: 'f',
       EVEN: 'j'
     },
-    INTER_TRIAL_DELAY: 0 // milliseconds
+    INTER_TRIAL_DELAY: 2000 // milliseconds
   };
