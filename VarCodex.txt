@@ -9,8 +9,24 @@ VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
    - state.experiment
    - state.events
 
-2. NumberSwitchingTask Experiment State:
-   - experimentState: 'READY', 'SHOWING_DIGIT', 'AWAITING_RESPONSE', 'TRIAL_COMPLETE', 'EXPERIMENT_COMPLETE'
+2. Event Model (Global Application State):
+   - Handles navigation and general app events
+   - Defined in backend/models/Event.js
+   Core Variables:
+   - name
+   - description
+
+3. Experiment Model (Experiment-Specific Operations):
+   - Manages data for number switching task experiments
+   - Defined in backend/models/Experiment.js
+   Core Variables:
+   - name
+   - description
+   - config
+   - results
+
+4. NumberSwitchingTask Experiment State:
+   - experimentState: 'INITIALIZING', 'READY', 'SHOWING_DIGIT', 'AWAITING_RESPONSE', 'TRIAL_COMPLETE', 'EXPERIMENT_COMPLETE'
    - currentTrialIndex
    - currentDigit
    - responses
@@ -24,71 +40,17 @@ VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
    - trialsPerDifficulty
    - isCustom
 
-3. Number Generation:
-   - generateTrialNumbers function
-   - generateMarkovNumber function
-   - DIGITS_PER_TRIAL constant
-   Core Variables:
-   - config.DIFFICULTY_LEVELS
-   - config.numTrials
-   - trialNumbers
-
-4. Trial Presentation:
-   - TrialDisplay component
-   - showNextDigit function
-   - handleResponse function
-   Core Variables:
-   - currentDigit
-   - currentTrialIndex
-   - totalTrials
-   - experimentState
-
-5. Image Capture:
-   - captureImage function
-   - videoElement
-   - queueCapture function
-   - captureAndSaveImage function
-   Core Variables:
-   - videoStream
-   - videoElement
-   - canvas
-
-6. Data Storage:
-   - Frontend: IndexedDB (DB_NAME: 'ExperimentDB')
-   - Backend: MongoDB with Mongoose
-   - Event and Experiment models
-   - CRUD operations in controllers
-
-7. Data Export:
-   - getAllTrialData function
-   - ResultsView component
-   - onExport prop/function
-   - processDataForExport function
-   - downloadData function
-   Core Variables:
-   - results
-   - trialEntries
-   - totalTrials
-   - correctTrials
-   - exportFormat (e.g., 'csv', 'json')
-
-8. Backend:
+5. Backend Structure:
    - server.js: Main Express.js server
    - database.js: MongoDB connection
    - Routes:
-     - eventRoutes.js: Routes for event data
-     - experimentRoutes.js: Routes for experiment data
+     - eventRoutes.js: Routes for global event data
+     - experimentRoutes.js: Routes for experiment-specific data
    - Controllers:
-     - eventController.js: Logic for event data
+     - eventController.js: Logic for global event data
      - experimentController.js: Logic for experiment data
-   - Models:
-     - Event.js: Mongoose schema for events
-     - Experiment.js: Mongoose schema for experiments
-   - Utils:
-     - imageHandler.js: Image upload and processing
-     - dataExport.js: CSV and ZIP creation
 
-9. Frontend Components:
+6. Frontend Components:
    - EventButton
    - EventList
    - EventDisplay
@@ -99,10 +61,42 @@ VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
    - TrialDisplay
    - ResultsView
 
-10. Utility Files:
-    - cameraManager.js
-    - indexedDB.js
-    - markovChain.js
-    - zipCreator.js
+7. Utility Files:
+   - cameraManager.js
+   - indexedDB.js
+   - markovChain.js
+   - zipCreator.js
 
-This VarCodex reflects our robust backend implementation alongside existing frontend functionality, providing a comprehensive map of the Ephemera-NST project's current structure and capabilities.
+8. Conceptual Flow of State:
+   a. Global Application State (Events):
+      - Managed by Redux store
+      - Updated through eventSlice.js actions
+      - Persisted in MongoDB using Event model
+      - Used for navigation and app-wide information
+
+   b. Experiment State:
+      - Initialized in NumberSwitchingTask component
+      - Updated through user interactions and trial progression
+      - Managed locally during experiment execution
+      - Persisted to MongoDB using Experiment model upon completion
+      - Retrieved for analysis and export through experimentSlice.js actions
+
+   c. Data Flow:
+      User Interaction -> React Component -> Redux Action -> 
+      API Call -> Backend Route -> Controller -> 
+      Database Operation -> Response -> 
+      Redux Store Update -> React Component Re-render
+
+9. Current Implementation Notes:
+   - API Base URL: http://localhost:5069/api
+   - Experiment fetching implemented in experimentController.js
+   - Redux actions for experiments defined in experimentSlice.js
+   - Camera capture functionality integrated in NumberSwitchingTask component
+
+10. Identified Areas for Improvement:
+    - Ensure consistency between frontend API calls and backend routes
+    - Implement robust error handling for API requests
+    - Refine ID handling in experimentController.js (ObjectId vs string)
+    - Verify data structure alignment between frontend and backend
+
+This VarCodex reflects the current structure of the Ephemera-NST project, emphasizing the separation between global application state (Events) and experiment-specific operations (Experiments). It provides a comprehensive overview of the system's architecture and data flow, serving as a guide for ongoing development and maintenance.

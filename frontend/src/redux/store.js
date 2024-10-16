@@ -1,9 +1,12 @@
-
 import { configureStore } from '@reduxjs/toolkit';
-import rootReducer from './rootReducer';
+import experimentReducer from './experimentSlice';
+import configReducer from './configSlice';
+import eventReducer from './eventSlice';
 
-const store = configureStore({
-  reducer: rootReducer,
+export const store = configureStore({
+  reducer: {
+    experiment: experimentReducer,
+    config: configReducer,
+    event: eventReducer,
+  },
 });
-
-export default store;

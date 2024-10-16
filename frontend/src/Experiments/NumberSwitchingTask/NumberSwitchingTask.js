@@ -26,14 +26,14 @@ function NumberSwitchingTask() {
     trials
   } = useTrialLogic();
 
-  const [keypressCount, setKeypressCount] = useState(0);
-  const [showResults, setShowResults] = useState(false);
-
   useEffect(() => {
     dispatch(fetchExperiment('nst'));
     initializeCamera().catch(error => console.error('Error initializing camera:', error));
     return () => shutdownCamera();
   }, [dispatch]);
+
+  const [keypressCount, setKeypressCount] = useState(0);
+  const [showResults, setShowResults] = useState(false);
 
   const captureImage = useCallback(async () => {
     try {

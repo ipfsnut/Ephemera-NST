@@ -49,10 +49,40 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
+  });
+});
+
 // Connect to database
 connectDB().then(() => {
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     logger.info(`Server running on port ${port}`);
+  });
+
+  server.on('error', (error) => {
+    if (error.syscall !== 'listen') {
+      throw error;
+    }
+
+    switch (error.code) {
+      case 'EACCES':
+        logger.error(`Port ${port} requires elevated privileges`);
+        process.exit(1);
+        break;
+      case 'EADDRINUSE':
+        logger.error(`Port ${port} is already in use`);
+        process.exit(1);
+        break;
+      default:
+        throw error;
+    }
   });
 }).catch((error) => {
   logger.error('Failed to connect to the database', error);
