@@ -7,7 +7,8 @@ import { processTrialResponse } from './trialUtils';
 import { initializeCamera, queueCapture, shutdownCamera } from '../../utils/cameraManager';
 import { initDB, saveTrialData, getAllTrialData, clearDatabase } from '../../utils/indexedDB';
 import { createAndDownloadZip } from '../../utils/zipCreator';
-import { captureAndProcessImage } from '../../utils/NumberSwitchingImage';
+import ResultsView from './ResultsView';
+
 
 function NumberSwitchingTask() {
   const config = useSelector(state => state.config);
@@ -27,94 +28,71 @@ function NumberSwitchingTask() {
   const [keypressCount, setKeypressCount] = useState(0);
   const [downloadFunction, setDownloadFunction] = useState(null);
   const [isDbInitialized, setIsDbInitialized] = useState(false);
-  const [trialData, setTrialData] = useState({
-    image: null,
-    // Add other relevant trial data fields here
-  });
+  const [showResults, setShowResults] = useState(false);
+
+
 
   useEffect(() => {
     initDB().then((database) => {
       setDB(database);
       setIsDbInitialized(true);
-      console.log('Database initialized successfully');
-    }).catch(error => console.error('Error initializing database:', error));
+      return initializeCamera();
+    }).catch(error => console.error('Error during initialization:', error));
   }, []);
 
-  const saveImage = useCallback(async (imageBlob, isInitial = false) => {
+  const captureImage = useCallback(async () => {
+    try {
+      const imageBlob = await queueCapture();
+      console.log('Image captured successfully, blob size:', imageBlob.size);
+      return imageBlob;
+    } catch (error) {
+      console.error('Error capturing image:', error);
+      return null;
+    }
+  }, []);
+  const saveResponseWithImage = useCallback(async (responseData, imageBlob) => {
     if (!isDbInitialized) {
-      console.log('Database not yet initialized, queuing image save');
+      console.log('Database not yet initialized, queuing response save');
       return;
     }
 
-    const trialData = {
-      trialNumber: isInitial ? 'initial' : `${currentTrialIndex}-${responses.length + 1}`,
-      trialIndex: isInitial ? -1 : currentTrialIndex,
-      responses: [{
-        imageBlob,
-        timestamp: Date.now(),
-        isInitial
-      }]
+    const fullResponse = {
+      id: `${currentTrialIndex}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      trialIndex: currentTrialIndex,
+      ...responseData,
+      imageBlob: imageBlob,
+      timestamp: Date.now()
     };
 
-    try {
-      await saveTrialData(db, trialData);
-      console.log(`${isInitial ? 'Initial' : 'Trial'} image saved successfully`);
-    } catch (error) {
-      console.error(`Error saving ${isInitial ? 'initial' : 'trial'} image:`, error);
+    if (db) {
+      try {
+        await saveTrialData(db, fullResponse);
+        console.log(`Response saved successfully. Image blob size: ${imageBlob ? imageBlob.size : 'N/A'}`);
+      } catch (error) {
+        console.error('Error saving trial data:', error);
+      }
     }
-  }, [db, currentTrialIndex, responses.length, isDbInitialized]);
-  useEffect(() => {
-    initDB().then((database) => {
-      setDB(database);
-      return initializeCamera();
-    }).then(() => {
-      return queueCapture();
-    }).then(imageBlob => {
-      console.log('Initial photo captured, blob size:', imageBlob.size);
-      return saveImage(imageBlob, true);
-    }).catch(error => console.error('Error during initialization:', error));
-
-    return () => shutdownCamera();
-  }, []);
+  }, [db, currentTrialIndex, isDbInitialized]);
   const handleResponse = useCallback(async (response) => {
     if (experimentState === 'AWAITING_RESPONSE') {
-      setKeypressCount(prevCount => {
-        const newCount = prevCount + 1;
-        console.log('Keypress count:', newCount);
-        if (newCount % 5 === 0) {
-          queueCapture().then(imageBlob => {
-            if (imageBlob) {
-              console.log('Image captured successfully, blob size:', imageBlob.size);
-              saveResponseWithImage(imageBlob);
-            }
-          }).catch(error => console.error('Error capturing image:', error));
-        }
-        return newCount;
-      });
+      setKeypressCount(prevCount => prevCount + 1);
 
-      const newResponse = {
-        digit: currentDigit,
-        response: response,
-        correct: (response === config.KEYS.ODD && parseInt(currentDigit) % 2 !== 0) || 
-                 (response === config.KEYS.EVEN && parseInt(currentDigit) % 2 === 0),
+      const processedResponse = processTrialResponse(currentDigit, response, config.KEYS);
+      const responseData = {
+        ...processedResponse,
         timestamp: Date.now()
       };
 
-      saveResponseWithImage(null, newResponse);
+      let imageBlob = null;
+      if (keypressCount % 5 === 0) {
+        imageBlob = await captureImage();
+      }
+
+      await saveResponseWithImage(responseData, imageBlob);
       showNextDigit();
     }
-  }, [experimentState, currentDigit, config.KEYS, showNextDigit]);
+  }, [experimentState, currentDigit, config.KEYS, showNextDigit, keypressCount, captureImage, saveResponseWithImage]);
 
-  const saveResponseWithImage = useCallback((imageBlob, response = null) => {
-    const updatedResponses = [...responses, response || { imageBlob, timestamp: Date.now() }];
-    if (db) {
-      saveTrialData(db, {
-        trialNumber: `${currentTrialIndex}-${updatedResponses.length}`,
-        trialIndex: currentTrialIndex,
-        responses: updatedResponses
-      }).catch(error => console.error('Error saving trial data:', error));
-    }
-  }, [responses, db, currentTrialIndex]);
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (event.key === config.KEYS.ODD || event.key === config.KEYS.EVEN) {
@@ -139,58 +117,29 @@ function NumberSwitchingTask() {
   }, [experimentState, startExperiment]);
 
   useEffect(() => {
-    console.log('Experiment state changed:', experimentState);
     if (experimentState === 'EXPERIMENT_COMPLETE') {
-      console.log('Experiment complete, setting up download function');
-      const downloadResults = async () => {
-        try {
-          const allTrialData = await getAllTrialData(db);
-          createAndDownloadZip(allTrialData);
-        } catch (error) {
-          console.error('Error downloading results:', error);
-        }
-      };
-      setDownloadFunction(() => downloadResults);
+      shutdownCamera();
+      console.log('Camera shut down after experiment completion');
+      setShowResults(true);
     }
-  }, [experimentState, db]);
-
-  useEffect(() => {
-    if (experimentState === 'EXPERIMENT_COMPLETE') {
-      console.log('Experiment complete, setting up download function');
-      const downloadResults = async () => {
-        try {
-          const allTrialData = await getAllTrialData(db);
-          await createAndDownloadZip(allTrialData);
-          await clearDatabase(db);
-          console.log('Database cleared after successful export');
-        } catch (error) {
-          console.error('Error downloading results or clearing database:', error);
-        }
-      };
-      setDownloadFunction(() => downloadResults);
-    }
-  }, [experimentState, db]);
+  }, [experimentState]);
+  
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
-      <TrialDisplay
-        currentDigit={currentDigit}
-        currentTrialIndex={currentTrialIndex}
-        totalTrials={trials.length}
-        experimentState={experimentState}
-      />
-      {experimentState === 'EXPERIMENT_COMPLETE' && (
-        <>
-          {console.log('Rendering ResultsDisplay')}
-          <ResultsDisplay
-            results={responses}
-            downloadResults={downloadFunction}
-          />
-        </>
+      {!showResults ? (
+        <TrialDisplay
+          currentDigit={currentDigit}
+          currentTrialIndex={currentTrialIndex}
+          totalTrials={trials.length}
+          experimentState={experimentState}
+        />
+      ) : (
+        <ResultsView db={db} onExport={downloadFunction} />
       )}
     </div>
   );
+  
 }
 
 export default NumberSwitchingTask;
-

@@ -22,3 +22,6 @@ Thumbs.db
 # Dependency lock files
 package-lock.json
 yarn.lock
+
+# AI toolkit
+# VarCodex.txt

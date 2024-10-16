@@ -1,0 +1,143 @@
+VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
+
+1. State Management:
+   - Redux store
+   - useSelector hook
+   - config state
+   Core Variables:
+   - state.config
+   - state.experiment
+
+2. NumberSwitchingTask Experiment State:
+   - experimentState: 'READY', 'SHOWING_DIGIT', 'AWAITING_RESPONSE', 'TRIAL_COMPLETE', 'EXPERIMENT_COMPLETE'
+   - currentTrialIndex
+   - currentDigit
+   - responses
+   - trials
+   Core Variables:
+   - experimentState
+   - currentTrialIndex
+   - currentDigitIndex
+   - responses
+   - trials
+
+3. Number Generation:
+   - generateTrialNumbers function
+   - generateMarkovNumber function
+   - DIGITS_PER_TRIAL constant
+   Core Variables:
+   - config.DIFFICULTY_LEVELS
+   - config.numTrials
+   - trialNumbers
+
+4. Trial Presentation:
+   - TrialDisplay component
+   - showNextDigit function
+   - handleResponse function
+   Core Variables:
+   - currentDigit
+   - currentTrialIndex
+   - totalTrials
+   - experimentState
+
+5. Image Capture:
+   - captureImage function
+   - videoElement
+   - queueCapture function
+   - captureAndSaveImage function
+   Core Variables:
+   - imageBlob
+   - videoElement
+   - canvas
+
+6. Data Storage:
+   - IndexedDB
+   - initDB function
+   - saveTrialData function
+   - STORE_NAME constant
+   Core Variables:
+   - db
+   - STORE_NAME
+   - responseData
+
+7. Data Export:
+   - getAllTrialData function
+   - ResultsView component
+   - onExport prop/function
+   - processDataForExport function
+   - downloadData function
+   Core Variables:
+   - results
+   - trialEntries
+   - totalTrials
+   - correctTrials
+   - exportFormat (e.g., 'csv', 'json')
+
+8. Backend:
+   - server.js: Main Express.js server
+   - Services: eventService.js
+   - Routes:
+     - eventRoutes.js: Routes for event data
+   - Controllers:
+     - experimentController.js: Logic for experiment data
+   Core Variables:
+   - db: Database connection object
+   - app: Express application instance
+   - PORT: Server port number
+   
+   New Components (ToDo):
+   - database.js: Database connection and models
+     - DB_URI: Database connection string
+     - connect() function
+   - models/experiment.js:
+     - ExperimentSchema
+     - ExperimentModel
+   - controllers/experimentController.js:
+     - createExperiment(req, res)
+     - getExperiment(req, res)
+     - updateExperiment(req, res)
+     - deleteExperiment(req, res)
+   - routes/experimentRoutes.js:
+     - POST /api/experiments
+     - GET /api/experiments/:id
+     - PUT /api/experiments/:id
+     - DELETE /api/experiments/:id
+   - middleware/auth.js:
+     - authenticate(req, res, next)
+   - utils/imageProcessor.js:
+     - processAndUpload(imageData)
+
+Key Components:
+- NumberSwitchingTask
+- TrialDisplay
+- ResultsView
+- ImageDebugger
+
+Utility Files:
+- cameraManager.js
+- indexedDB.js
+- markovChain.js
+
+Backend Migration:
+
+1. Data Storage:
+   - Move IndexedDB operations to server-side database (e.g., PostgreSQL or MongoDB)
+   - Create API endpoints for data storage and retrieval
+
+2. Data Processing:
+   - Move trial data processing to the server
+   - Implement server-side data export functionality
+
+3. Image Handling:
+   - Store captured images on the server
+   - Create API endpoint for image upload
+
+4. Authentication:
+   - Implement user authentication on the server
+   - Create secure routes for data access
+
+5. Front-end Refactoring:
+   - Update data fetching logic to use new API endpoints
+   - Modify state management to work with server-side data storage
+
+This refactoring will enhance our application's scalability, security, and performance. It's a significant step towards delivering a robust and efficient project. Let's tackle these changes systematically, and we'll have a much-improved architecture in no time.
