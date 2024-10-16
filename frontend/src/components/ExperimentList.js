@@ -1,12 +1,12 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { fetchEvent } from '../redux/eventSlice';
+import { fetchExperiment } from '../redux/eventSlice';
 
 const ExperimentList = () => {
   const dispatch = useDispatch();
 
   const handleStartExperiment = (eventId) => {
-    dispatch(fetchEvent(eventId));
+    dispatch(fetchExperiment(eventId));
   };
 
   return (

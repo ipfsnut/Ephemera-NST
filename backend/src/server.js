@@ -1,22 +1,62 @@
-const app = require('./app');
+const express = require('express');
+const cors = require('cors');
+const winston = require('winston');
+const eventRoutes = require('./routes/eventRoutes');
+const experimentRoutes = require('./routes/experimentRoutes');
+const { connectDB } = require('../database');
 
-const PORT = process.env.PORT || 5069;
+// Goal 1: Server Setup
+const app = express();
+const port = process.env.PORT || 5069;
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
+// Logging setup
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  defaultMeta: { service: 'ephemera-nst-backend' },
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
-try {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-} catch (error) {
-  console.error('Failed to start server:', error);
-  process.exit(1);
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
 }
+
+// Middleware
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
+
+// Routes
+app.use('/api/events', eventRoutes);
+app.use('/api/experiments', experimentRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+  res.status(err.status || 500).json({
+    message: err.message,
+    error: process.env.NODE_ENV === 'production' ? {} : err,
+  });
+});
+
+// Connect to database
+connectDB().then(() => {
+  app.listen(port, () => {
+    logger.info(`Server running on port ${port}`);
+  });
+}).catch((error) => {
+  logger.error('Failed to connect to the database', error);
+  process.exit(1);
+});
+
+module.exports = app;

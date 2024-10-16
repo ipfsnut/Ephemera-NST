@@ -1,0 +1,47 @@
+Ephemera-NST Frontend Update Plan
+
+1. API Integration:
+   - Create an API service module to handle all backend requests
+   - Update event-related components to use the new API service instead of local storage
+
+2. State Management Updates:
+   - Modify Redux actions and reducers to work with the new API
+   - Update event slices to handle asynchronous API calls
+
+3. Remove IndexedDB:
+   - Identify all instances of IndexedDB usage in the frontend
+   - Replace IndexedDB calls with corresponding API calls to the backend
+
+4. Update Data Export:
+   - Modify the export functionality to use the new backend export endpoint
+   - Remove local ZIP creation logic
+
+5. Image Handling:
+   - Update image capture process to send images directly to the backend
+   - Modify image display to fetch from the backend when needed
+
+6. Error Handling and Loading States:
+   - Implement consistent error handling for API requests
+   - Add loading states to components that depend on API data
+
+7. Update EventList and EventDetail Components:
+   - Refactor to fetch data from the backend instead of local storage
+   - Implement pagination if needed for large datasets
+
+8. Optimize Performance:
+   - Implement caching strategies for frequently accessed data
+   - Use React.memo or useMemo where appropriate to prevent unnecessary re-renders
+
+9. Update Configuration Management:
+   - Move experiment configuration storage to the backend
+   - Update configuration forms to interact with the backend API
+
+10. Testing and Validation:
+    - Update existing frontend tests to work with the new API integration
+    - Add new tests for API interaction and error handling
+
+11. Documentation:
+    - Update component documentation to reflect new data flow
+    - Create a guide for frontend-backend interaction for future developers
+
+This plan will guide our frontend refactoring process, ensuring we leverage our new backend capabilities while maintaining the integrity of our experiment-related code.

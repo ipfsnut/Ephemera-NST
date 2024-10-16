@@ -4,7 +4,7 @@ import EventButton from './components/EventButton';
 import EventDisplay from './components/EventDisplay';
 import ExperimentList from './components/ExperimentList';
 import AboutNST from './Experiments/NumberSwitchingTask/AboutNST';
-import { fetchEvent } from './redux/eventSlice';
+import { fetchExperiment } from './redux/eventSlice';
 import ExperimentScreen from './components/ExperimentScreen';
 import ConfigScreen from './components/ConfigScreen';
 
@@ -13,7 +13,7 @@ const App = () => {
   const { currentEvent, status, error } = useSelector(state => state.event);
 
   const handleEventClick = (eventId) => {
-    dispatch(fetchEvent(eventId));
+    dispatch(fetchExperiment(eventId));
   };
 
   return (

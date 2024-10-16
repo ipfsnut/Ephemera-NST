@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { generateTrials } from './trialUtils';
 
 const EXPERIMENT_STATES = {
   INITIALIZING: 'INITIALIZING',

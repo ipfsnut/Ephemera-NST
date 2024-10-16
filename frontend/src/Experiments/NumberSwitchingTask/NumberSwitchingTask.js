@@ -1,17 +1,19 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
-import ResultsDisplay from '../../components/ResultsDisplay';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchExperiment, createExperiment } from '../../redux/eventSlice';
 import TrialDisplay from './TrialDisplay';
 import { useTrialLogic } from './useTrialLogic';
 import { processTrialResponse } from './trialUtils';
 import { initializeCamera, queueCapture, shutdownCamera } from '../../utils/cameraManager';
-import { initDB, saveTrialData, getAllTrialData, clearDatabase } from '../../utils/indexedDB';
-import { createAndDownloadZip } from '../../utils/zipCreator';
 import ResultsView from './ResultsView';
+import axios from 'axios';
 
+const API_BASE_URL = 'http://localhost:5069';
 
 function NumberSwitchingTask() {
+  const dispatch = useDispatch();
   const config = useSelector(state => state.config);
+  const { currentExperiment } = useSelector(state => state.event);
   const {
     experimentState,
     currentTrialIndex,
@@ -24,21 +26,14 @@ function NumberSwitchingTask() {
     trials
   } = useTrialLogic();
 
-  const [db, setDB] = useState(null);
   const [keypressCount, setKeypressCount] = useState(0);
-  const [downloadFunction, setDownloadFunction] = useState(null);
-  const [isDbInitialized, setIsDbInitialized] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-
-
   useEffect(() => {
-    initDB().then((database) => {
-      setDB(database);
-      setIsDbInitialized(true);
-      return initializeCamera();
-    }).catch(error => console.error('Error during initialization:', error));
-  }, []);
+    dispatch(fetchExperiment('nst'));
+    initializeCamera().catch(error => console.error('Error initializing camera:', error));
+    return () => shutdownCamera();
+  }, [dispatch]);
 
   const captureImage = useCallback(async () => {
     try {
@@ -50,29 +45,31 @@ function NumberSwitchingTask() {
       return null;
     }
   }, []);
-  const saveResponseWithImage = useCallback(async (responseData, imageBlob) => {
-    if (!isDbInitialized) {
-      console.log('Database not yet initialized, queuing response save');
-      return;
-    }
 
+  const saveResponseWithImage = useCallback(async (responseData, imageBlob) => {
     const fullResponse = {
-      id: `${currentTrialIndex}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      experimentId: currentExperiment.id,
       trialIndex: currentTrialIndex,
       ...responseData,
-      imageBlob: imageBlob,
       timestamp: Date.now()
     };
 
-    if (db) {
-      try {
-        await saveTrialData(db, fullResponse);
-        console.log(`Response saved successfully. Image blob size: ${imageBlob ? imageBlob.size : 'N/A'}`);
-      } catch (error) {
-        console.error('Error saving trial data:', error);
+    try {
+      const formData = new FormData();
+      formData.append('response', JSON.stringify(fullResponse));
+      if (imageBlob) {
+        formData.append('image', imageBlob, 'response-image.jpg');
       }
+      await axios.post(`${API_BASE_URL}/api/experiments/${currentExperiment.id}/responses`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true
+      });
+      console.log('Response saved successfully');
+    } catch (error) {
+      console.error('Error saving trial data:', error);
     }
-  }, [db, currentTrialIndex, isDbInitialized]);
+  }, [currentExperiment, currentTrialIndex]);
+
   const handleResponse = useCallback(async (response) => {
     if (experimentState === 'AWAITING_RESPONSE') {
       setKeypressCount(prevCount => prevCount + 1);
@@ -111,10 +108,10 @@ function NumberSwitchingTask() {
   }, [experimentState, showNextDigit]);
 
   useEffect(() => {
-    if (experimentState === 'READY') {
+    if (experimentState === 'READY' && currentExperiment) {
       startExperiment();
     }
-  }, [experimentState, startExperiment]);
+  }, [experimentState, startExperiment, currentExperiment]);
 
   useEffect(() => {
     if (experimentState === 'EXPERIMENT_COMPLETE') {
@@ -123,7 +120,6 @@ function NumberSwitchingTask() {
       setShowResults(true);
     }
   }, [experimentState]);
-  
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
@@ -135,11 +131,10 @@ function NumberSwitchingTask() {
           experimentState={experimentState}
         />
       ) : (
-        <ResultsView db={db} onExport={downloadFunction} />
+        <ResultsView experimentId={currentExperiment.id} />
       )}
     </div>
   );
-  
 }
 
 export default NumberSwitchingTask;

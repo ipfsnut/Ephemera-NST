@@ -7,6 +7,7 @@ VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
    Core Variables:
    - state.config
    - state.experiment
+   - state.events
 
 2. NumberSwitchingTask Experiment State:
    - experimentState: 'READY', 'SHOWING_DIGIT', 'AWAITING_RESPONSE', 'TRIAL_COMPLETE', 'EXPERIMENT_COMPLETE'
@@ -15,11 +16,13 @@ VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
    - responses
    - trials
    Core Variables:
-   - experimentState
-   - currentTrialIndex
-   - currentDigitIndex
-   - responses
-   - trials
+   - DIFFICULTY_LEVELS
+   - KEYS
+   - INTER_TRIAL_DELAY
+   - numTrials
+   - difficultyLevels
+   - trialsPerDifficulty
+   - isCustom
 
 3. Number Generation:
    - generateTrialNumbers function
@@ -46,19 +49,15 @@ VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
    - queueCapture function
    - captureAndSaveImage function
    Core Variables:
-   - imageBlob
+   - videoStream
    - videoElement
    - canvas
 
 6. Data Storage:
-   - IndexedDB
-   - initDB function
-   - saveTrialData function
-   - STORE_NAME constant
-   Core Variables:
-   - db
-   - STORE_NAME
-   - responseData
+   - Frontend: IndexedDB (DB_NAME: 'ExperimentDB')
+   - Backend: MongoDB with Mongoose
+   - Event and Experiment models
+   - CRUD operations in controllers
 
 7. Data Export:
    - getAllTrialData function
@@ -75,69 +74,35 @@ VarCodex: Primary App Functions, Main Variables/Components, and Core Variables
 
 8. Backend:
    - server.js: Main Express.js server
-   - Services: eventService.js
+   - database.js: MongoDB connection
    - Routes:
      - eventRoutes.js: Routes for event data
+     - experimentRoutes.js: Routes for experiment data
    - Controllers:
+     - eventController.js: Logic for event data
      - experimentController.js: Logic for experiment data
-   Core Variables:
-   - db: Database connection object
-   - app: Express application instance
-   - PORT: Server port number
-   
-   New Components (ToDo):
-   - database.js: Database connection and models
-     - DB_URI: Database connection string
-     - connect() function
-   - models/experiment.js:
-     - ExperimentSchema
-     - ExperimentModel
-   - controllers/experimentController.js:
-     - createExperiment(req, res)
-     - getExperiment(req, res)
-     - updateExperiment(req, res)
-     - deleteExperiment(req, res)
-   - routes/experimentRoutes.js:
-     - POST /api/experiments
-     - GET /api/experiments/:id
-     - PUT /api/experiments/:id
-     - DELETE /api/experiments/:id
-   - middleware/auth.js:
-     - authenticate(req, res, next)
-   - utils/imageProcessor.js:
-     - processAndUpload(imageData)
+   - Models:
+     - Event.js: Mongoose schema for events
+     - Experiment.js: Mongoose schema for experiments
+   - Utils:
+     - imageHandler.js: Image upload and processing
+     - dataExport.js: CSV and ZIP creation
 
-Key Components:
-- NumberSwitchingTask
-- TrialDisplay
-- ResultsView
-- ImageDebugger
+9. Frontend Components:
+   - EventButton
+   - EventList
+   - EventDisplay
+   - EventDetail
+   - EventForm
+   - TaskInterface
+   - NumberSwitchingTask
+   - TrialDisplay
+   - ResultsView
 
-Utility Files:
-- cameraManager.js
-- indexedDB.js
-- markovChain.js
+10. Utility Files:
+    - cameraManager.js
+    - indexedDB.js
+    - markovChain.js
+    - zipCreator.js
 
-Backend Migration:
-
-1. Data Storage:
-   - Move IndexedDB operations to server-side database (e.g., PostgreSQL or MongoDB)
-   - Create API endpoints for data storage and retrieval
-
-2. Data Processing:
-   - Move trial data processing to the server
-   - Implement server-side data export functionality
-
-3. Image Handling:
-   - Store captured images on the server
-   - Create API endpoint for image upload
-
-4. Authentication:
-   - Implement user authentication on the server
-   - Create secure routes for data access
-
-5. Front-end Refactoring:
-   - Update data fetching logic to use new API endpoints
-   - Modify state management to work with server-side data storage
-
-This refactoring will enhance our application's scalability, security, and performance. It's a significant step towards delivering a robust and efficient project. Let's tackle these changes systematically, and we'll have a much-improved architecture in no time.
+This VarCodex reflects our robust backend implementation alongside existing frontend functionality, providing a comprehensive map of the Ephemera-NST project's current structure and capabilities.

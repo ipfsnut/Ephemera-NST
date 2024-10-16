@@ -1,7 +1,7 @@
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+const JSZip = require('jszip');
+const fs = require('fs').promises;
 
-export const createAndDownloadZip = async (allTrialData) => {
+const createAndDownloadZip = async (allTrialData) => {
   const zip = new JSZip();
   let csvContent = "Trial Number,Effort Level,All Correct,Image Names,Responses\n";
 
@@ -23,6 +23,12 @@ export const createAndDownloadZip = async (allTrialData) => {
   });
 
   zip.file("experiment_data.csv", csvContent);
-  const zipBlob = await zip.generateAsync({type: "blob"});
-  saveAs(zipBlob, "experiment_results.zip");
+  const zipBuffer = await zip.generateAsync({type: "nodebuffer"});
+  
+  const fileName = "experiment_results.zip";
+  await fs.writeFile(fileName, zipBuffer);
+  
+  return fileName;
 };
+
+module.exports = { createAndDownloadZip };

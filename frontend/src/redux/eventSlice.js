@@ -3,35 +3,78 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5069';
 
-export const fetchEvent = createAsyncThunk(
-  'event/fetchEvent',
-  async (eventId) => {
-    const response = await axios.get(`${API_BASE_URL}/api/events/${eventId}`, {
+export const fetchExperiment = createAsyncThunk(
+  'event/fetchExperiment',
+  async (experimentId) => {
+    const response = await axios.get(`${API_BASE_URL}/api/experiments/${experimentId}`, {
       withCredentials: true
     });
     return response.data;
   }
 );
+
+export const createExperiment = createAsyncThunk(
+  'event/createExperiment',
+  async (experimentData) => {
+    const response = await axios.post(`${API_BASE_URL}/api/experiments`, experimentData, {
+      withCredentials: true
+    });
+    return response.data;
+  }
+);
+
+export const updateExperiment = createAsyncThunk(
+  'event/updateExperiment',
+  async ({ id, experimentData }) => {
+    const response = await axios.put(`${API_BASE_URL}/api/experiments/${id}`, experimentData, {
+      withCredentials: true
+    });
+    return response.data;
+  }
+);
+
+export const deleteExperiment = createAsyncThunk(
+  'event/deleteExperiment',
+  async (experimentId) => {
+    await axios.delete(`${API_BASE_URL}/api/experiments/${experimentId}`, {
+      withCredentials: true
+    });
+    return experimentId;
+  }
+);
+
 const eventSlice = createSlice({
   name: 'event',
   initialState: {
-    currentEvent: null,
+    currentExperiment: null,
     status: 'idle',
     error: null
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchEvent.pending, (state) => {
+      .addCase(fetchExperiment.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(fetchEvent.fulfilled, (state, action) => {
+      .addCase(fetchExperiment.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.currentEvent = action.payload;
+        state.currentExperiment = action.payload;
       })
-      .addCase(fetchEvent.rejected, (state, action) => {
+      .addCase(fetchExperiment.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
+      })
+      .addCase(createExperiment.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentExperiment = action.payload;
+      })
+      .addCase(updateExperiment.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentExperiment = action.payload;
+      })
+      .addCase(deleteExperiment.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentExperiment = null;
       });
   },
 });
