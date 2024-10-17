@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
 
 const EXPERIMENT_STATES = {
   INITIALIZING: 'INITIALIZING',
@@ -20,13 +21,24 @@ export const useTrialLogic = () => {
   const [responses, setResponses] = useState([]);
 
   useEffect(() => {
-    console.log('Generating trials');
-    const generatedTrials = generateTrials(config);
-    setTrials(generatedTrials);
-    setExperimentState(EXPERIMENT_STATES.READY);
-    console.log('Trials generated, experiment ready');
-  }, [config]);
+    const fetchTrials = async () => {
+      if (experimentState === EXPERIMENT_STATES.INITIALIZING) {
+        console.log('Generating trials');
+        console.log('Config object:', config);
+        try {
+          const response = await axios.post('http://localhost:5069/api/events/generate-trials', config);
+          setTrials(response.data);
+          setExperimentState(EXPERIMENT_STATES.READY);
+          console.log('Trials generated, experiment ready');
+        } catch (error) {
+          console.error('Error generating trials:', error);
+          setExperimentState(EXPERIMENT_STATES.ERROR);
+        }
+      }
+    };
 
+    fetchTrials();
+  }, [config, experimentState]);
   useEffect(() => {
     if (experimentState === EXPERIMENT_STATES.SHOWING_DIGIT && trials.length > 0) {
       showNextDigit();

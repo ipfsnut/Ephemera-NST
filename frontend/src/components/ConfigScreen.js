@@ -4,9 +4,9 @@ import { updateConfig } from '../redux/configSlice';
 
 const ConfigScreen = () => {
   const dispatch = useDispatch();
-  const config = useSelector(state => state.config);
-  const [numTrials, setNumTrials] = useState(config.numTrials);
-  const [difficultyLevel, setDifficultyLevel] = useState(config.difficultyLevels[0]);
+  const config = useSelector(state => state.config) || {};
+  const [numTrials, setNumTrials] = useState(config.numTrials || 10);
+  const [difficultyLevel, setDifficultyLevel] = useState(config.difficultyLevels?.[0] || 'easy');
 
   const handleCustomSubmit = (e) => {
     e.preventDefault();
@@ -44,7 +44,7 @@ const ConfigScreen = () => {
             onChange={(e) => setDifficultyLevel(e.target.value)}
           >
             <option value="all">All Levels (Random)</option>
-            {Object.keys(config.DIFFICULTY_LEVELS).map(level => (
+            {Object.keys(config.DIFFICULTY_LEVELS || {}).map(level => (
               <option key={level} value={level}>
                 Level {level} ({config.DIFFICULTY_LEVELS[level].min}-{config.DIFFICULTY_LEVELS[level].max} switches)
               </option>

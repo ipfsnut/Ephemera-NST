@@ -1,39 +1,38 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchExperiment, createExperiment } from '../../redux/eventSlice';
+import { fetchEvent, saveExperimentResponse } from '../../redux/eventSlice';
 import TrialDisplay from './TrialDisplay';
 import { useTrialLogic } from './useTrialLogic';
 import { processTrialResponse } from './trialUtils';
 import { initializeCamera, queueCapture, shutdownCamera } from '../../utils/cameraManager';
 import ResultsView from './ResultsView';
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:5069';
 
 function NumberSwitchingTask() {
   const dispatch = useDispatch();
   const config = useSelector(state => state.config);
-  const { currentExperiment } = useSelector(state => state.event);
+  const { currentEvent, status } = useSelector(state => state.event);
   const {
     experimentState,
     currentTrialIndex,
     currentDigit,
-    responses,
     startExperiment,
     showNextDigit,
-    setCurrentDigitIndex,
-    setExperimentState,
     trials
   } = useTrialLogic();
 
+  const [keypressCount, setKeypressCount] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+
   useEffect(() => {
-    dispatch(fetchExperiment('nst'));
+    const initializeExperiment = async () => {
+      const nstEventId = 'nst'; // Assuming 'nst' is the ID for Number Switching Task
+      await dispatch(fetchEvent(nstEventId));
+    };
+    
+    initializeExperiment();
     initializeCamera().catch(error => console.error('Error initializing camera:', error));
     return () => shutdownCamera();
   }, [dispatch]);
-
-  const [keypressCount, setKeypressCount] = useState(0);
-  const [showResults, setShowResults] = useState(false);
 
   const captureImage = useCallback(async () => {
     try {
@@ -47,8 +46,12 @@ function NumberSwitchingTask() {
   }, []);
 
   const saveResponseWithImage = useCallback(async (responseData, imageBlob) => {
+    if (!currentEvent || !currentEvent._id) {
+      console.error('No current event found');
+      return;
+    }
+
     const fullResponse = {
-      experimentId: currentExperiment.id,
       trialIndex: currentTrialIndex,
       ...responseData,
       timestamp: Date.now()
@@ -60,15 +63,11 @@ function NumberSwitchingTask() {
       if (imageBlob) {
         formData.append('image', imageBlob, 'response-image.jpg');
       }
-      await axios.post(`${API_BASE_URL}/api/experiments/${currentExperiment.id}/responses`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true
-      });
-      console.log('Response saved successfully');
+      await dispatch(saveExperimentResponse({ id: currentEvent._id, responseData: formData }));
     } catch (error) {
-      console.error('Error saving trial data:', error);
+      console.error('Error saving response:', error);
     }
-  }, [currentExperiment, currentTrialIndex]);
+  }, [currentEvent, currentTrialIndex, dispatch]);
 
   const handleResponse = useCallback(async (response) => {
     if (experimentState === 'AWAITING_RESPONSE') {
@@ -108,10 +107,10 @@ function NumberSwitchingTask() {
   }, [experimentState, showNextDigit]);
 
   useEffect(() => {
-    if (experimentState === 'READY' && currentExperiment) {
+    if (experimentState === 'READY' && currentEvent) {
       startExperiment();
     }
-  }, [experimentState, startExperiment, currentExperiment]);
+  }, [experimentState, startExperiment, currentEvent]);
 
   useEffect(() => {
     if (experimentState === 'EXPERIMENT_COMPLETE') {
@@ -120,6 +119,10 @@ function NumberSwitchingTask() {
       setShowResults(true);
     }
   }, [experimentState]);
+
+  if (status === 'loading') {
+    return <div>Loading experiment...</div>;
+  }
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
@@ -131,7 +134,7 @@ function NumberSwitchingTask() {
           experimentState={experimentState}
         />
       ) : (
-        <ResultsView experimentId={currentExperiment.id} />
+        <ResultsView eventId={currentEvent._id} />
       )}
     </div>
   );

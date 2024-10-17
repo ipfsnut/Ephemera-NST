@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const winston = require('winston');
 const eventRoutes = require('./routes/eventRoutes');
-const experimentRoutes = require('./routes/experimentRoutes');
 const { connectDB } = require('../database');
 
 // Goal 1: Server Setup
@@ -37,8 +36,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
+console.log('Server starting...');
 app.use('/api/events', eventRoutes);
-app.use('/api/experiments', experimentRoutes);
+console.log('Event routes registered');
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
