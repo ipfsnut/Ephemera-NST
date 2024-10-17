@@ -8,14 +8,14 @@ const ConfigScreen = () => {
   const [numTrials, setNumTrials] = useState(config.numTrials || 10);
   const [difficultyLevel, setDifficultyLevel] = useState(config.difficultyLevels?.[0] || 'easy');
 
-  const handleCustomSubmit = (e) => {
+  const handleCustomSubmit = useCallback((e) => {
     e.preventDefault();
     dispatch(updateConfig({ 
       numTrials: parseInt(numTrials, 10), 
       difficultyLevel, 
       isCustom: true 
     }));
-  };
+  }, [dispatch, numTrials, difficultyLevel]);
 
   const handleNumTrialsChange = (e) => {
     const value = e.target.value;
@@ -59,4 +59,4 @@ const ConfigScreen = () => {
   );
 };
 
-export default ConfigScreen;
+export default React.memo(ConfigScreen);

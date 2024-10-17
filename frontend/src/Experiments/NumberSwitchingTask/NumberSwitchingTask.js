@@ -1,38 +1,33 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchEvent, saveExperimentResponse } from '../../redux/eventSlice';
+import { fetchEvent } from '../../redux/eventSlice';
 import TrialDisplay from './TrialDisplay';
 import { useTrialLogic } from './useTrialLogic';
 import { processTrialResponse } from './trialUtils';
 import { initializeCamera, queueCapture, shutdownCamera } from '../../utils/cameraManager';
 import ResultsView from './ResultsView';
+import axios from 'axios';
 
-function NumberSwitchingTask() {
+const API_BASE_URL = 'http://localhost:5069';
+
+const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   const dispatch = useDispatch();
-  const config = useSelector(state => state.config);
-  const { currentEvent, status } = useSelector(state => state.event);
+  const config = useSelector(state => state.config.currentConfig);
+  const { currentExperiment } = useSelector(state => state.event);
   const {
     experimentState,
     currentTrialIndex,
     currentDigit,
+    responses,
     startExperiment,
     showNextDigit,
+    setExperimentState,
     trials
   } = useTrialLogic();
 
   const [keypressCount, setKeypressCount] = useState(0);
   const [showResults, setShowResults] = useState(false);
-
-  useEffect(() => {
-    const initializeExperiment = async () => {
-      const nstEventId = 'nst'; // Assuming 'nst' is the ID for Number Switching Task
-      await dispatch(fetchEvent(nstEventId));
-    };
-    
-    initializeExperiment();
-    initializeCamera().catch(error => console.error('Error initializing camera:', error));
-    return () => shutdownCamera();
-  }, [dispatch]);
+  const showNextDigitRef = useRef(false);
 
   const captureImage = useCallback(async () => {
     try {
@@ -46,12 +41,13 @@ function NumberSwitchingTask() {
   }, []);
 
   const saveResponseWithImage = useCallback(async (responseData, imageBlob) => {
-    if (!currentEvent || !currentEvent._id) {
-      console.error('No current event found');
+    if (!currentExperiment || !currentExperiment._id) {
+      console.error('No current experiment found');
       return;
     }
 
     const fullResponse = {
+      experimentId: currentExperiment._id,
       trialIndex: currentTrialIndex,
       ...responseData,
       timestamp: Date.now()
@@ -63,11 +59,14 @@ function NumberSwitchingTask() {
       if (imageBlob) {
         formData.append('image', imageBlob, 'response-image.jpg');
       }
-      await dispatch(saveExperimentResponse({ id: currentEvent._id, responseData: formData }));
+      const response = await axios.post(`${API_BASE_URL}/api/experiments/${currentExperiment._id}/responses`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      console.log('Response saved:', response.data);
     } catch (error) {
       console.error('Error saving response:', error);
     }
-  }, [currentEvent, currentTrialIndex, dispatch]);
+  }, [currentExperiment, currentTrialIndex]);
 
   const handleResponse = useCallback(async (response) => {
     if (experimentState === 'AWAITING_RESPONSE') {
@@ -85,11 +84,30 @@ function NumberSwitchingTask() {
       }
 
       await saveResponseWithImage(responseData, imageBlob);
-      showNextDigit();
+      showNextDigitRef.current = true;
+      setExperimentState('SHOWING_DIGIT');
     }
-  }, [experimentState, currentDigit, config.KEYS, showNextDigit, keypressCount, captureImage, saveResponseWithImage]);
+  }, [experimentState, currentDigit, config.KEYS, keypressCount, captureImage, saveResponseWithImage, setExperimentState]);
 
   useEffect(() => {
+    console.log('Effect: Fetching event and initializing camera');
+    if (!currentExperiment) {
+      dispatch(fetchEvent('nst'));
+    }
+    initializeCamera().catch(error => console.error('Error initializing camera:', error));
+    return () => shutdownCamera();
+  }, [dispatch, currentExperiment]);
+
+  useEffect(() => {
+    console.log('Effect: Handling experiment state and showing next digit');
+    if (experimentState === 'SHOWING_DIGIT' && showNextDigitRef.current) {
+      showNextDigit();
+      showNextDigitRef.current = false;
+    }
+  }, [experimentState, showNextDigit]);
+
+  useEffect(() => {
+    console.log('Effect: Handling key press');
     const handleKeyPress = (event) => {
       if (event.key === config.KEYS.ODD || event.key === config.KEYS.EVEN) {
         handleResponse(event.key);
@@ -101,28 +119,27 @@ function NumberSwitchingTask() {
   }, [handleResponse, config.KEYS]);
 
   useEffect(() => {
+    console.log('Effect: Handling experiment state and showing next digit');
     if (experimentState === 'SHOWING_DIGIT') {
       showNextDigit();
     }
   }, [experimentState, showNextDigit]);
 
   useEffect(() => {
-    if (experimentState === 'READY' && currentEvent) {
+    console.log('Effect: Starting experiment if ready');
+    if (experimentState === 'READY' && currentExperiment) {
       startExperiment();
     }
-  }, [experimentState, startExperiment, currentEvent]);
+  }, [experimentState, startExperiment, currentExperiment]);
 
   useEffect(() => {
+    console.log('Effect: Handling experiment completion');
     if (experimentState === 'EXPERIMENT_COMPLETE') {
       shutdownCamera();
       console.log('Camera shut down after experiment completion');
       setShowResults(true);
     }
   }, [experimentState]);
-
-  if (status === 'loading') {
-    return <div>Loading experiment...</div>;
-  }
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
@@ -134,10 +151,10 @@ function NumberSwitchingTask() {
           experimentState={experimentState}
         />
       ) : (
-        <ResultsView eventId={currentEvent._id} />
+        <ResultsView experimentId={currentExperiment.id} />
       )}
     </div>
   );
-}
+});
 
 export default NumberSwitchingTask;

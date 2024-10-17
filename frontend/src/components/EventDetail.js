@@ -1,33 +1,37 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, Link } from 'react-router-dom';
-import { fetchEventById, deleteEvent } from '../eventSlice';
+import { fetchEvent, generateExperiment } from '../redux/eventSlice';
 
-const EventDetail = () => {
-  const { id } = useParams();
+const EventDetail = ({ id }) => {
   const dispatch = useDispatch();
-  const event = useSelector(state => state.events.currentEvent);
+  const event = useSelector(state => state.event.currentEvent);
+  const status = useSelector(state => state.event.status);
 
   useEffect(() => {
-    dispatch(fetchEventById(id));
-  }, [dispatch, id]);
+    if (status === 'idle') {
+      dispatch(fetchEvent(id));
+    }
+  }, [status, dispatch, id]);
 
-  if (!event) {
-    return <div>Loading...</div>;
-  }
-
-  const handleDelete = () => {
-    dispatch(deleteEvent(id));
-    // Redirect to home page after deletion
-    // You might want to use react-router's history object for this
+  const handleGenerateExperiment = () => {
+    const currentConfig = {}; // Fill with actual config
+    dispatch(generateExperiment(currentConfig));
   };
+
+  if (status === 'loading') return <div>Loading...</div>;
+  if (!event) return <div>No event found</div>;
 
   return (
     <div>
-      <h2>{event.title}</h2>
+      <h1>{event.name}</h1>
       <p>{event.description}</p>
-      <Link to={`/edit/${event.id}`}>Edit</Link>
-      <button onClick={handleDelete}>Delete</button>
+      {event.trials ? (
+        <div>
+          {/* Display trials */}
+        </div>
+      ) : (
+        <button onClick={handleGenerateExperiment}>Generate Experiment</button>
+      )}
     </div>
   );
 };

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5069';
+const API_BASE_URL = window.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
+
+
 
 const ResultsDisplay = ({ experimentId }) => {
   const [isExporting, setIsExporting] = useState(false);

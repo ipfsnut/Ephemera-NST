@@ -1,13 +1,16 @@
+import { configureStore } from '@reduxjs/toolkit';
 import configReducer from './configSlice';
 import eventReducer from './eventSlice';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
+import loggingMiddleware from '../Experiments/loggingMiddleware';
 
-
-export const store = configureStore({
+const store = configureStore({
   reducer: {
     config: configReducer,
     event: eventReducer,
   },
+  middleware: (getDefaultMiddleware) => 
+    getDefaultMiddleware().concat(loggingMiddleware),
+  devTools: process.env.NODE_ENV !== 'production',
 });
 
 const initialState = {
@@ -29,10 +32,4 @@ const initialState = {
   INTER_TRIAL_DELAY: 0
 };
 
-const configSlice = createSlice({
-  name: 'config',
-  initialState,
-  reducers: {
-    // ... existing reducers
-  }
-});
+export default store;

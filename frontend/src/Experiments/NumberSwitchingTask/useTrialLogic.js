@@ -1,6 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
+import { fetchEvent, setEventFetched } from '../../redux/eventSlice';
+
 
 const EXPERIMENT_STATES = {
   INITIALIZING: 'INITIALIZING',
@@ -12,38 +14,59 @@ const EXPERIMENT_STATES = {
 };
 
 export const useTrialLogic = () => {
-  const config = useSelector(state => state.config);
+  const config = useSelector(state => state.config.currentConfig);
   const [experimentState, setExperimentState] = useState(EXPERIMENT_STATES.INITIALIZING);
   const [trials, setTrials] = useState([]);
   const [currentTrialIndex, setCurrentTrialIndex] = useState(0);
   const [currentDigitIndex, setCurrentDigitIndex] = useState(0);
   const [currentDigit, setCurrentDigit] = useState(null);
   const [responses, setResponses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const fetchTrialsRef = useRef(false);
+  const dispatch = useDispatch();
+  const currentEvent = useSelector(state => state.event.currentEvent);
+  const eventFetched = useSelector(state => state.event.eventFetched);
 
   useEffect(() => {
-    const fetchTrials = async () => {
-      if (experimentState === EXPERIMENT_STATES.INITIALIZING) {
-        console.log('Generating trials');
-        console.log('Config object:', config);
-        try {
-          const response = await axios.post('http://localhost:5069/api/events/generate-trials', config);
-          setTrials(response.data);
-          setExperimentState(EXPERIMENT_STATES.READY);
-          console.log('Trials generated, experiment ready');
-        } catch (error) {
-          console.error('Error generating trials:', error);
-          setExperimentState(EXPERIMENT_STATES.ERROR);
-        }
-      }
-    };
-
-    fetchTrials();
-  }, [config, experimentState]);
-  useEffect(() => {
-    if (experimentState === EXPERIMENT_STATES.SHOWING_DIGIT && trials.length > 0) {
-      showNextDigit();
+    console.log('useEffect: Checking for currentEvent and eventFetched');
+    if (!currentEvent && !eventFetched) {
+      dispatch(fetchEvent('nst'));
+      dispatch(setEventFetched(true));
     }
-  }, [experimentState, trials, showNextDigit]);
+  }, [dispatch, currentEvent, eventFetched]);
+
+  const fetchTrials = useCallback(async () => {
+    console.log('Fetching trials');
+    if (!config || !config.DIFFICULTY_LEVELS || !config.numTrials || fetchTrialsRef.current) {
+      console.log('Config not fully loaded yet or trials already fetched');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        DIFFICULTY_LEVELS: config.DIFFICULTY_LEVELS,
+        numTrials: config.numTrials
+      };
+      console.log('Sending payload to generate trials:', payload);
+      const response = await axios.post('http://localhost:5069/api/events/generate-trials', payload);
+      setTrials(response.data);
+      setExperimentState(EXPERIMENT_STATES.READY);
+      fetchTrialsRef.current = true;
+    } catch (error) {
+      console.error('Error generating trials:', error);
+      setExperimentState(EXPERIMENT_STATES.ERROR);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [config]);
+
+  useEffect(() => {
+    console.log('useEffect: Checking experimentState and isLoading');
+    if (experimentState === EXPERIMENT_STATES.INITIALIZING && !isLoading && !fetchTrialsRef.current) {
+      fetchTrials();
+    }
+  }, [experimentState, isLoading, fetchTrials]);
 
   const startExperiment = useCallback(() => {
     console.log('Starting experiment');
@@ -51,60 +74,36 @@ export const useTrialLogic = () => {
   }, []);
 
   const showNextDigit = useCallback(() => {
-    console.log('showNextDigit called', { currentTrialIndex, currentDigitIndex, trialsLength: trials.length });
-
     if (currentTrialIndex >= trials.length) {
-      console.log('All trials complete');
       setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE);
       return;
     }
 
     const currentTrial = trials[currentTrialIndex];
-    console.log('Current trial', currentTrial);
-
     if (!currentTrial || !currentTrial.number) {
-      console.log('Invalid trial data');
+      console.error('Invalid trial data');
       return;
     }
 
     const digits = currentTrial.number.split('');
-
     if (currentDigitIndex < digits.length) {
-      const digit = digits[currentDigitIndex];
-      console.log(`Setting current digit: ${digit}`);
-      setCurrentDigit(digit);
+      setCurrentDigit(digits[currentDigitIndex]);
       setCurrentDigitIndex(prevIndex => prevIndex + 1);
       setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE);
     } else {
-      console.log('Trial complete');
       setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE);
       setTimeout(() => {
         setCurrentTrialIndex(prevIndex => prevIndex + 1);
         setCurrentDigitIndex(0);
         setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
-      }, 1000); // 1 second delay before next trial
+      }, 1000);
     }
-  }, [currentTrialIndex, currentDigitIndex, trials, setCurrentDigit, setCurrentDigitIndex, setCurrentTrialIndex, setExperimentState]);
-  
-  
-  const moveToNextTrial = useCallback(() => {
-    console.log('Moving to next trial');
-    setCurrentTrialIndex(prevIndex => prevIndex + 1);
-    setCurrentDigitIndex(0);
-    setResponses([]);
-    setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
-    console.log(`Experiment state changed to: ${experimentState}`);
-
-    showNextDigit(); // Call showNextDigit when moving to the next trial
-  }, [showNextDigit]);
+  }, [currentTrialIndex, currentDigitIndex, trials]);
 
   const handleResponse = useCallback((response) => {
-    console.log(`Handling response: ${response}`);
     setResponses(prevResponses => [...prevResponses, response]);
-    setCurrentDigitIndex(prevIndex => prevIndex + 1);
     setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
-    console.log(`Experiment state changed to: ${experimentState}`);
-    showNextDigit(); // Call showNextDigit after handling the response
+    showNextDigit();
   }, [showNextDigit]);
 
   return {
@@ -115,6 +114,7 @@ export const useTrialLogic = () => {
     responses,
     startExperiment,
     handleResponse,
-    trials
+    trials,
+    isLoading
   };
 };

@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5069';
+const API_BASE_URL = window.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
+
+
 
 export const fetchConfig = createAsyncThunk(
   'config/fetchConfig',

@@ -1,6 +1,6 @@
 const Event = require('../models/Event');
 const winston = require('winston');
-const { generateMarkovNumber } = require('../utils/markovChain');
+const { generateTrialNumbers } = require('../utils/markovChain');
 const { generateCSV, createZip } = require('../utils/dataExport');
 
 exports.getAllEvents = async (req, res) => {
@@ -90,15 +90,15 @@ exports.deleteEvent = async (req, res) => {
 
 exports.generateExperiment = async (req, res) => {
   try {
-    const { difficulty, trialCount } = req.body;
-    const trials = Array.from({ length: trialCount }, () => generateMarkovNumber(difficulty));
-    const newExperiment = new Event({
-      type: 'experiment',
-      name: 'Number Switching Task',
+    const { currentConfig } = req.body;
+    const trials = generateTrialNumbers(currentConfig);
+    const newEvent = new Event({
+      name: 'Generated Experiment',
+      description: 'Automatically generated experiment',
       trials: trials
     });
-    const savedExperiment = await newExperiment.save();
-    res.status(201).json(savedExperiment);
+    const savedEvent = await newEvent.save();
+    res.json(savedEvent);
   } catch (error) {
     winston.error('Error generating experiment:', error);
     res.status(500).json({ message: 'Error generating experiment' });

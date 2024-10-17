@@ -8,22 +8,19 @@ const EventForm = () => {
   const dispatch = useDispatch();
   const history = useHistory();
   const currentEvent = useSelector(state => state.events.currentEvent);
+  const cachedEvents = useSelector(state => state.events.cachedEvents);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    if (id) {
+    if (id && !cachedEvents[id]) {
       dispatch(fetchEventById(id));
+    } else if (id && cachedEvents[id]) {
+      setTitle(cachedEvents[id].title);
+      setDescription(cachedEvents[id].description);
     }
-  }, [dispatch, id]);
-
-  useEffect(() => {
-    if (currentEvent) {
-      setTitle(currentEvent.title);
-      setDescription(currentEvent.description);
-    }
-  }, [currentEvent]);
+  }, [dispatch, id, cachedEvents]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

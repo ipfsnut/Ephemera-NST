@@ -23,5 +23,10 @@
     "style-loader": "^4.0.0",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@redux-devtools/extension": "^3.3.0",
+    "redux-devtools-extension": "^2.13.9",
+    "save-dev": "^0.0.1-security"
   }
 }

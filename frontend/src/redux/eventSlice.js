@@ -1,20 +1,18 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5069/api';
+const API_BASE_URL = window.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
+
 
 export const fetchEvent = createAsyncThunk(
   'event/fetchEvent',
-  async (id, { rejectWithValue }) => {
-    console.log('Fetching event with ID:', id);
-    try {
-      const response = await axios.get(`${API_BASE_URL}/events/${id}`);
-      console.log('Event fetched successfully:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching event:', error);
-      return rejectWithValue(error.response.data);
+  async (id, { getState }) => {
+    const { event } = getState();
+    if (event.cachedEvents[id]) {
+      return event.cachedEvents[id];
     }
+    const response = await axios.get(`${API_BASE_URL}/events/${id}`);
+    return response.data;
   }
 );
 
@@ -28,8 +26,8 @@ export const createEvent = createAsyncThunk(
 
 export const generateExperiment = createAsyncThunk(
   'event/generateExperiment',
-  async () => {
-    const response = await axios.post(`${API_BASE_URL}/events/generate`);
+  async (currentConfig) => {
+    const response = await axios.post(`${API_BASE_URL}/events/generate`, { currentConfig });
     return response.data;
   }
 );
@@ -47,9 +45,15 @@ const eventSlice = createSlice({
   initialState: {
     currentEvent: null,
     status: 'idle',
-    error: null
+    error: null,
+    cachedEvents: {},
+    eventFetched: false
   },
-  reducers: {},
+  reducers: {
+    setEventFetched: (state, action) => {
+      state.eventFetched = action.payload;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchEvent.pending, (state) => {
@@ -58,6 +62,7 @@ const eventSlice = createSlice({
       .addCase(fetchEvent.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.currentEvent = action.payload;
+        state.cachedEvents[action.payload.id] = action.payload;
       })
       .addCase(fetchEvent.rejected, (state, action) => {
         state.status = 'failed';
@@ -68,6 +73,7 @@ const eventSlice = createSlice({
       })
       .addCase(generateExperiment.fulfilled, (state, action) => {
         state.currentEvent = action.payload;
+        state.cachedEvents[action.payload.id] = action.payload;
       })
       .addCase(saveExperimentResponse.fulfilled, (state, action) => {
         // Update state if needed after saving response
@@ -75,4 +81,5 @@ const eventSlice = createSlice({
   }
 });
 
+export const { setEventFetched } = eventSlice.actions;
 export default eventSlice.reducer;

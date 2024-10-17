@@ -1,0 +1,13 @@
+Implement Redux DevTools in your application if not already present. This will allow us to track state changes and action dispatches in real-time.
+
+Add console.logs or use Redux middleware to log every action dispatch, especially for the fetchEvent action. This will help us pinpoint where and why the action is being called repeatedly.
+
+Review the useEffect hooks in your components, particularly in ExperimentList and TrialDisplay. Ensure that the dependency arrays are correctly specified to prevent unnecessary re-renders and action dispatches.
+
+Examine the eventSlice reducer, focusing on how the fetchEvent.fulfilled action is handled. Ensure that it's not triggering any unintended state updates that could cause a re-fetch.
+
+Implement a caching mechanism in your Redux store for fetched events. This can prevent unnecessary API calls for already fetched data.
+
+Use the React DevTools profiler to identify which components are re-rendering and why. This can help isolate the source of the problem.
+
+Consider implementing a debounce or throttle mechanism on the fetchEvent action to prevent rapid successive calls.
