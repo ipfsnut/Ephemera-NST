@@ -51,13 +51,24 @@ const eventSlice = createSlice({
     error: null,
     cachedEvents: {},
     eventFetched: false,
-    trials: []
-
+    trials: [],
+    experimentState: null,
+    currentTrialIndex: null,
+    currentDigit: null
   },
   reducers: {
     setEventFetched: (state, action) => {
       state.eventFetched = action.payload;
-    }
+    },
+    setExperimentState: (state, action) => {
+      state.experimentState = action.payload;
+    },
+    setCurrentTrial: (state, action) => {
+      state.currentTrialIndex = action.payload;
+    },
+    setCurrentDigit: (state, action) => {
+      state.currentDigit = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -84,7 +95,7 @@ const eventSlice = createSlice({
         state.currentEvent = action.payload;
         state.cachedEvents[action.payload.id] = action.payload;
       });
-  }});
+  }
+});
 
-export const { setEventFetched } = eventSlice.actions;
-export default eventSlice.reducer;
+export const { setEventFetched, setExperimentState, setCurrentTrial, setCurrentDigit } = eventSlice.actions;export default eventSlice.reducer;

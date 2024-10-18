@@ -3,6 +3,8 @@ const Experiment = require('../models/Experiment');
 const winston = require('winston');
 const { generateTrialNumbers } = require('../utils/markovChain');
 const { generateCSV, createZip } = require('../utils/dataExport');
+const experimentConfig = require('../config');
+
 
 exports.getAllEvents = async (req, res) => {
   try {
@@ -32,8 +34,8 @@ exports.getEventById = async (req, res) => {
         const newExperiment = new Experiment({
           name: 'Number Switching Task',
           description: 'Cognitive flexibility experiment',
-          configuration: { numTrials: 20, DIFFICULTY_LEVELS: { easy: { min: 2, max: 4 }, hard: { min: 5, max: 7 } } },
-          trials: generateTrialNumbers({ numTrials: 20, DIFFICULTY_LEVELS: { easy: { min: 2, max: 4 }, hard: { min: 5, max: 7 } } })
+          configuration: experimentConfig,
+          trials: generateTrialNumbers(experimentConfig)
         });
         await newExperiment.save();
         return res.json({
@@ -165,3 +167,4 @@ exports.exportExperimentData = async (req, res) => {
     res.status(500).json({ message: 'Error exporting experiment data' });
   }
 };
+
