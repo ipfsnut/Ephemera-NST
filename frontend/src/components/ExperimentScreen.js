@@ -1,25 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import NumberSwitchingTask from '../Experiments/NumberSwitchingTask/NumberSwitchingTask';
 
-function ExperimentScreen({ experimentType }) {
-  const [experiment, setExperiment] = useState(null);
+function ExperimentScreen({ experimentType, currentDigit, currentTrialIndex, totalTrials, experimentState }) {
+  console.log('ExperimentScreen props:', { experimentType, currentDigit, currentTrialIndex, totalTrials, experimentState });
   const config = useSelector(state => state.config);
+  const currentEvent = useSelector(state => state.event.currentEvent);
 
-  useEffect(() => {
-    switch(experimentType) {
-      case 'NumberSwitchingTask':
-        setExperiment(<NumberSwitchingTask config={config} />);
-        break;
-      // Add cases for other experiment types here
-      default:
-        setExperiment(<div>Experiment not found</div>);
+  const renderExperiment = () => {
+    if (currentEvent && currentEvent.experimentComponent === 'NumberSwitchingTask') {
+      console.log('Rendering NumberSwitchingTask');
+      return (
+        <NumberSwitchingTask
+          config={config}
+          currentDigit={currentDigit}
+          currentTrialIndex={currentTrialIndex}
+          totalTrials={totalTrials}
+          experimentState={experimentState}
+        />
+      );
     }
-  }, [experimentType, config]);
+    console.log('Experiment not found');
+    return <div>Experiment not found</div>;
+  };
+
+  const experimentComponent = renderExperiment();
+  console.log('Experiment component:', experimentComponent);
 
   return (
     <div className="fixed inset-0 bg-white flex items-center justify-center">
-      {experiment}
+      {experimentComponent}
     </div>
   );
 }

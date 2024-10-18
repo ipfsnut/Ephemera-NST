@@ -20,33 +20,43 @@ export const useTrialLogic = () => {
   const experimentState = useSelector(state => state.event.experimentState);
   const currentTrialIndex = useSelector(state => state.event.currentTrialIndex);
   const currentDigit = useSelector(state => state.event.currentDigit);
+  console.log('useTrialLogic hook, currentEvent:', currentEvent);
 
   useEffect(() => {
+    console.log('currentEvent:', currentEvent);
     if (!currentEvent) {
       dispatch(fetchEvent('nst'));
     }
   }, [dispatch, currentEvent]);
 
   useEffect(() => {
+    console.log('useTrialLogic: currentEvent updated', currentEvent);
     if (currentEvent && currentEvent.trials) {
+      console.log('Setting trials:', currentEvent.trials);
       setTrials(currentEvent.trials);
       setIsLoading(false);
       dispatch(setExperimentState(EXPERIMENT_STATES.READY));
+      console.log('Experiment state set to READY');
+    } else {
+      console.log('currentEvent or trials not available');
     }
   }, [currentEvent, dispatch]);
 
   const startExperiment = useCallback(() => {
+    console.log('Starting experiment');
     dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
     showNextDigit();
   }, [dispatch]);
 
   const showNextDigit = useCallback(() => {
+    console.log('Showing next digit');
     if (currentTrialIndex >= trials.length) {
       dispatch(setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE));
       return;
     }
 
     const currentTrial = trials[currentTrialIndex];
+    console.log('Current trial:', currentTrial);
     if (!currentTrial || !currentTrial.number) {
       console.error('Invalid trial data');
       return;
@@ -69,15 +79,19 @@ export const useTrialLogic = () => {
   }, [currentTrialIndex, currentDigitIndex, trials, dispatch]);
 
   const handleResponse = useCallback(() => {
+    console.log('Handling response');
     dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
     showNextDigit();
   }, [dispatch, showNextDigit]);
+
+  useEffect(() => {
+    console.log('isLoading:', isLoading);
+  }, [isLoading]);
 
   return {
     experimentState,
     currentTrialIndex,
     currentDigit,
-    showNextDigit,
     startExperiment,
     handleResponse,
     trials,

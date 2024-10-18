@@ -58,15 +58,19 @@ const eventSlice = createSlice({
   },
   reducers: {
     setEventFetched: (state, action) => {
+      consoleole.log('Setting event fetched:', action.payload);
       state.eventFetched = action.payload;
     },
     setExperimentState: (state, action) => {
+      console.log('Setting experiment state:', action.payload);
       state.experimentState = action.payload;
     },
     setCurrentTrial: (state, action) => {
+      console.log('Setting current trial:', action.payload);
       state.currentTrialIndex = action.payload;
     },
     setCurrentDigit: (state, action) => {
+      console.log('Setting current digit:', action.payload);
       state.currentDigit = action.payload;
     },
   },

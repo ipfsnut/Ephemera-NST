@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import TrialDisplay from './TrialDisplay';
+import ExperimentScreen from '../../components/ExperimentScreen';
 import { useTrialLogic } from './useTrialLogic';
 import ResultsView from './ResultsView';
 
@@ -15,8 +15,10 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
     trials,
     isLoading
   } = useTrialLogic();
+  console.log('Rendering NumberSwitchingTask, experimentState:', experimentState);
 
   const handleKeyPress = useCallback((event) => {
+    console.log('Key pressed:', event.key);
     if (experimentState === 'AWAITING_RESPONSE') {
       if (event.key === config.KEYS.ODD || event.key === config.KEYS.EVEN) {
         handleResponse(event.key);
@@ -27,11 +29,13 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   }, [experimentState, config.KEYS, handleResponse, startExperiment]);
 
   useEffect(() => {
+    console.log('experimentState:', experimentState);
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleKeyPress]);
 
   useEffect(() => {
+    console.log('experimentState:', experimentState);
     if (trials.length > 0 && experimentState === 'READY') {
       startExperiment();
     }
@@ -44,7 +48,8 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
       {experimentState !== 'EXPERIMENT_COMPLETE' ? (
-        <TrialDisplay
+        <ExperimentScreen
+          experimentType="NumberSwitchingTask"
           currentDigit={currentDigit}
           currentTrialIndex={currentTrialIndex}
           totalTrials={trials.length}
@@ -58,5 +63,3 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
 });
 
 export default NumberSwitchingTask;
-
-

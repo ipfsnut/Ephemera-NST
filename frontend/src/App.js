@@ -19,6 +19,7 @@ const App = () => {
       dispatch(fetchEvent(eventId));
     }
   }, [dispatch, cachedEvents]);
+  console.log('Current event in App:', currentEvent);
 
   return (
     <div className="app">
@@ -33,6 +34,7 @@ const App = () => {
       <main>
         {status === 'loading' && <div>Loading...</div>}
         {status === 'failed' && <div>Error: {error}</div>}
+        {console.log('Rendering decision in App:', { status, currentEventId: currentEvent?.id })}
         {status === 'succeeded' && (
           currentEvent.id === 'experiment-list' ? (
             <ExperimentList />
@@ -48,8 +50,6 @@ const App = () => {
         )}
       </main>
     </div>
-  );
-};
+  );};
 
 export default App;
-

@@ -18,7 +18,12 @@ const events = {
     'about': { id: 'about', name: 'About', description: 'Information about the project' },
     'experiment-list': { id: 'experiment-list', name: 'Experiment List', description: 'List of available experiments' },
     'literature': { id: 'literature', name: 'Literature', description: 'Papers and research findings' },
-    'nst': { id: 'nst', name: 'Number Switching Task', description: 'Cognitive flexibility experiment' },
+      'nst': { 
+        id: 'nst', 
+        name: 'Number Switching Task', 
+        description: 'Cognitive effort experiment',
+        experimentComponent: 'NumberSwitchingTask'
+      },
     'about-nst': { id: 'about-nst', name: 'About NST', description: 'Information about the Number Switching Task' },
     'config': { id: 'config', name: 'Configure Experiment', description: 'Set up experiment parameters' },
   };
