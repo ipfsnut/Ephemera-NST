@@ -49,6 +49,10 @@ const configSlice = createSlice({
         7: { min: 13, max: 14 }
       },
       numTrials: 1,
+      KEYS: {
+        ODD: 'f',
+        EVEN: 'j'
+      }
     },
     status: 'idle',
     error: null

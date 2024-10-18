@@ -7,11 +7,14 @@ const API_BASE_URL = window.REACT_APP_API_BASE_URL || 'http://localhost:5069/api
 export const fetchEvent = createAsyncThunk(
   'event/fetchEvent',
   async (id, { getState }) => {
+    console.log('Fetching event with ID:', id);
     const { event } = getState();
     if (event.cachedEvents[id]) {
+      console.log('Event found in cache:', event.cachedEvents[id]);
       return event.cachedEvents[id];
     }
     const response = await axios.get(`${API_BASE_URL}/events/${id}`);
+    console.log('Event fetched from API:', response.data);
     return response.data;
   }
 );
@@ -47,7 +50,9 @@ const eventSlice = createSlice({
     status: 'idle',
     error: null,
     cachedEvents: {},
-    eventFetched: false
+    eventFetched: false,
+    trials: []
+
   },
   reducers: {
     setEventFetched: (state, action) => {
@@ -63,6 +68,10 @@ const eventSlice = createSlice({
         state.status = 'succeeded';
         state.currentEvent = action.payload;
         state.cachedEvents[action.payload.id] = action.payload;
+        if (action.payload.trials) {
+          state.trials = action.payload.trials;
+        }
+        state.eventFetched = true;
       })
       .addCase(fetchEvent.rejected, (state, action) => {
         state.status = 'failed';
@@ -74,12 +83,8 @@ const eventSlice = createSlice({
       .addCase(generateExperiment.fulfilled, (state, action) => {
         state.currentEvent = action.payload;
         state.cachedEvents[action.payload.id] = action.payload;
-      })
-      .addCase(saveExperimentResponse.fulfilled, (state, action) => {
-        // Update state if needed after saving response
       });
-  }
-});
+  }});
 
 export const { setEventFetched } = eventSlice.actions;
 export default eventSlice.reducer;

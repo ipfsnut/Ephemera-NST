@@ -16,18 +16,26 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   const { currentExperiment } = useSelector(state => state.event);
   const {
     experimentState,
+    setExperimentState,
     currentTrialIndex,
     currentDigit,
     responses,
     startExperiment,
     showNextDigit,
-    setExperimentState,
     trials
   } = useTrialLogic();
 
   const [keypressCount, setKeypressCount] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const showNextDigitRef = useRef(false);
+
+  const handleStartExperiment = useCallback(() => {
+    if (!currentExperiment) {
+      dispatch(fetchEvent('nst'));
+    }
+    initializeCamera().catch(error => console.error('Error initializing camera:', error));
+    setExperimentState('READY');
+  }, [dispatch, currentExperiment, setExperimentState]);
 
   const captureImage = useCallback(async () => {
     try {
@@ -90,16 +98,6 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   }, [experimentState, currentDigit, config.KEYS, keypressCount, captureImage, saveResponseWithImage, setExperimentState]);
 
   useEffect(() => {
-    console.log('Effect: Fetching event and initializing camera');
-    if (!currentExperiment) {
-      dispatch(fetchEvent('nst'));
-    }
-    initializeCamera().catch(error => console.error('Error initializing camera:', error));
-    return () => shutdownCamera();
-  }, [dispatch, currentExperiment]);
-
-  useEffect(() => {
-    console.log('Effect: Handling experiment state and showing next digit');
     if (experimentState === 'SHOWING_DIGIT' && showNextDigitRef.current) {
       showNextDigit();
       showNextDigitRef.current = false;
@@ -107,33 +105,27 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   }, [experimentState, showNextDigit]);
 
   useEffect(() => {
-    console.log('Effect: Handling key press');
     const handleKeyPress = (event) => {
-      if (event.key === config.KEYS.ODD || event.key === config.KEYS.EVEN) {
-        handleResponse(event.key);
+      if (experimentState === 'READY') {
+        startExperiment();
+      } else if (experimentState === 'AWAITING_RESPONSE' && config && config.KEYS) {
+        if (event.key === config.KEYS.ODD || event.key === config.KEYS.EVEN) {
+          handleResponse(event.key);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handleResponse, config.KEYS]);
+  }, [experimentState, startExperiment, handleResponse, config]);
 
   useEffect(() => {
-    console.log('Effect: Handling experiment state and showing next digit');
-    if (experimentState === 'SHOWING_DIGIT') {
-      showNextDigit();
-    }
-  }, [experimentState, showNextDigit]);
-
-  useEffect(() => {
-    console.log('Effect: Starting experiment if ready');
     if (experimentState === 'READY' && currentExperiment) {
       startExperiment();
     }
   }, [experimentState, startExperiment, currentExperiment]);
 
   useEffect(() => {
-    console.log('Effect: Handling experiment completion');
     if (experimentState === 'EXPERIMENT_COMPLETE') {
       shutdownCamera();
       console.log('Camera shut down after experiment completion');
@@ -151,7 +143,7 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
           experimentState={experimentState}
         />
       ) : (
-        <ResultsView experimentId={currentExperiment.id} />
+        <ResultsView experimentId={currentExperiment && currentExperiment._id} />
       )}
     </div>
   );

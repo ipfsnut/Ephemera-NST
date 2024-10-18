@@ -2,11 +2,12 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { fetchEvent, setEventFetched } from '../../redux/eventSlice';
-
+import { v4 as uuidv4 } from 'uuid';
 
 const EXPERIMENT_STATES = {
   INITIALIZING: 'INITIALIZING',
   READY: 'READY',
+  RUNNING: 'RUNNING',
   SHOWING_DIGIT: 'SHOWING_DIGIT',
   AWAITING_RESPONSE: 'AWAITING_RESPONSE',
   TRIAL_COMPLETE: 'TRIAL_COMPLETE',
@@ -22,55 +23,28 @@ export const useTrialLogic = () => {
   const [currentDigit, setCurrentDigit] = useState(null);
   const [responses, setResponses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const fetchTrialsRef = useRef(false);
   const dispatch = useDispatch();
   const currentEvent = useSelector(state => state.event.currentEvent);
   const eventFetched = useSelector(state => state.event.eventFetched);
 
   useEffect(() => {
-    console.log('useEffect: Checking for currentEvent and eventFetched');
     if (!currentEvent && !eventFetched) {
       dispatch(fetchEvent('nst'));
       dispatch(setEventFetched(true));
     }
   }, [dispatch, currentEvent, eventFetched]);
 
-  const fetchTrials = useCallback(async () => {
-    console.log('Fetching trials');
-    if (!config || !config.DIFFICULTY_LEVELS || !config.numTrials || fetchTrialsRef.current) {
-      console.log('Config not fully loaded yet or trials already fetched');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const payload = {
-        DIFFICULTY_LEVELS: config.DIFFICULTY_LEVELS,
-        numTrials: config.numTrials
-      };
-      console.log('Sending payload to generate trials:', payload);
-      const response = await axios.post('http://localhost:5069/api/events/generate-trials', payload);
-      setTrials(response.data);
-      setExperimentState(EXPERIMENT_STATES.READY);
-      fetchTrialsRef.current = true;
-    } catch (error) {
-      console.error('Error generating trials:', error);
-      setExperimentState(EXPERIMENT_STATES.ERROR);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [config]);
-
   useEffect(() => {
-    console.log('useEffect: Checking experimentState and isLoading');
-    if (experimentState === EXPERIMENT_STATES.INITIALIZING && !isLoading && !fetchTrialsRef.current) {
-      fetchTrials();
+    if (currentEvent && currentEvent.trials) {
+      setTrials(currentEvent.trials);
+      setIsLoading(false);
+      setExperimentState(EXPERIMENT_STATES.READY);
     }
-  }, [experimentState, isLoading, fetchTrials]);
+  }, [currentEvent]);
 
   const startExperiment = useCallback(() => {
-    console.log('Starting experiment');
-    setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT);
+    setExperimentState(EXPERIMENT_STATES.RUNNING);
+    showNextDigit();
   }, []);
 
   const showNextDigit = useCallback(() => {
@@ -108,6 +82,7 @@ export const useTrialLogic = () => {
 
   return {
     experimentState,
+    setExperimentState,
     currentTrialIndex,
     currentDigit,
     showNextDigit,

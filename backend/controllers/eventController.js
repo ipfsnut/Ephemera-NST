@@ -1,4 +1,5 @@
 const Event = require('../models/Event');
+const Experiment = require('../models/Experiment');
 const winston = require('winston');
 const { generateTrialNumbers } = require('../utils/markovChain');
 const { generateCSV, createZip } = require('../utils/dataExport');
@@ -18,12 +19,37 @@ exports.getEventById = async (req, res) => {
     console.log('Fetching event with ID:', req.params.id);
     const eventId = req.params.id;
 
+    if (eventId === 'nst') {
+      const experiment = await Experiment.findOne({ name: 'Number Switching Task' });
+      if (experiment) {
+        return res.json({
+          id: experiment._id,
+          name: experiment.name,
+          description: experiment.description,
+          trials: experiment.trials
+        });
+      } else {
+        const newExperiment = new Experiment({
+          name: 'Number Switching Task',
+          description: 'Cognitive flexibility experiment',
+          configuration: { numTrials: 20, DIFFICULTY_LEVELS: { easy: { min: 2, max: 4 }, hard: { min: 5, max: 7 } } },
+          trials: generateTrialNumbers({ numTrials: 20, DIFFICULTY_LEVELS: { easy: { min: 2, max: 4 }, hard: { min: 5, max: 7 } } })
+        });
+        await newExperiment.save();
+        return res.json({
+          id: newExperiment._id,
+          name: newExperiment.name,
+          description: newExperiment.description,
+          trials: newExperiment.trials
+        });
+      }
+    }
+
     // Check for predefined events
     const predefinedEvents = {
       'about': { id: 'about', name: 'About', description: 'Information about the project' },
       'experiment-list': { id: 'experiment-list', name: 'Experiment List', description: 'List of available experiments' },
       'literature': { id: 'literature', name: 'Literature', description: 'Papers and research findings' },
-      'nst': { id: 'nst', name: 'Number Switching Task', description: 'Cognitive flexibility experiment' },
       'config': { id: 'config', name: 'Configure Experiment', description: 'Set up experiment parameters' },
     };
 
@@ -50,7 +76,9 @@ exports.getEventById = async (req, res) => {
     console.error('Error fetching event:', error);
     res.status(500).json({ message: 'Error fetching event' });
   }
-};exports.createEvent = async (req, res) => {
+};
+
+exports.createEvent = async (req, res) => {
   try {
     const newEvent = new Event(req.body);
     const savedEvent = await newEvent.save();
@@ -60,7 +88,6 @@ exports.getEventById = async (req, res) => {
     res.status(500).json({ message: 'Error creating event' });
   }
 };
-
 
 exports.updateEvent = async (req, res) => {
   try {
@@ -92,13 +119,14 @@ exports.generateExperiment = async (req, res) => {
   try {
     const { currentConfig } = req.body;
     const trials = generateTrialNumbers(currentConfig);
-    const newEvent = new Event({
+    const newExperiment = new Experiment({
       name: 'Generated Experiment',
       description: 'Automatically generated experiment',
+      configuration: currentConfig,
       trials: trials
     });
-    const savedEvent = await newEvent.save();
-    res.json(savedEvent);
+    const savedExperiment = await newExperiment.save();
+    res.json(savedExperiment);
   } catch (error) {
     winston.error('Error generating experiment:', error);
     res.status(500).json({ message: 'Error generating experiment' });
@@ -109,12 +137,12 @@ exports.saveExperimentResponse = async (req, res) => {
   try {
     const { id } = req.params;
     const response = req.body;
-    const event = await Event.findById(id);
-    if (!event) {
+    const experiment = await Experiment.findById(id);
+    if (!experiment) {
       return res.status(404).json({ message: 'Experiment not found' });
     }
-    event.responses.push(response);
-    await event.save();
+    experiment.responses.push(response);
+    await experiment.save();
     res.status(200).json({ message: 'Response saved successfully' });
   } catch (error) {
     winston.error('Error saving experiment response:', error);
@@ -125,11 +153,11 @@ exports.saveExperimentResponse = async (req, res) => {
 exports.exportExperimentData = async (req, res) => {
   try {
     const { id } = req.params;
-    const event = await Event.findById(id);
-    if (!event) {
+    const experiment = await Experiment.findById(id);
+    if (!experiment) {
       return res.status(404).json({ message: 'Experiment not found' });
     }
-    const csvFile = await generateCSV(event.responses, 'experiment_data.csv');
+    const csvFile = await generateCSV(experiment.responses, 'experiment_data.csv');
     const zipFile = await createZip([csvFile], 'experiment_data.zip');
     res.download(zipFile);
   } catch (error) {

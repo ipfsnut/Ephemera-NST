@@ -8,15 +8,19 @@ const EventDetail = ({ id }) => {
   const status = useSelector(state => state.event.status);
 
   useEffect(() => {
-    if (status === 'idle') {
+    console.log('useEffect triggered. Status:', status, 'Event:', event);
+    if (status === 'idle' && !event) {
+      console.log('Dispatching fetchEvent');
       dispatch(fetchEvent(id));
     }
-  }, [status, dispatch, id]);
+  }, [status, dispatch, id, event]);
 
   const handleGenerateExperiment = () => {
     const currentConfig = {}; // Fill with actual config
     dispatch(generateExperiment(currentConfig));
   };
+
+  console.log('Rendering EventDetail. Status:', status, 'Event:', event);
 
   if (status === 'loading') return <div>Loading...</div>;
   if (!event) return <div>No event found</div>;
@@ -35,5 +39,4 @@ const EventDetail = ({ id }) => {
     </div>
   );
 };
-
 export default EventDetail;
