@@ -21,33 +21,7 @@ exports.getEventById = async (req, res) => {
     console.log('Fetching event with ID:', req.params.id);
     const eventId = req.params.id;
 
-    if (eventId === 'nst') {
-      const experiment = await Experiment.findOne({ name: 'Number Switching Task' });
-      if (experiment) {
-        return res.json({
-          id: experiment._id,
-          name: experiment.name,
-          description: experiment.description,
-          trials: experiment.trials
-        });
-      } else {
-        const newExperiment = new Experiment({
-          name: 'Number Switching Task',
-          description: 'Cognitive flexibility experiment',
-          configuration: experimentConfig,
-          trials: generateTrialNumbers(experimentConfig)
-        });
-        await newExperiment.save();
-        return res.json({
-          id: newExperiment._id,
-          name: newExperiment.name,
-          description: newExperiment.description,
-          trials: newExperiment.trials
-        });
-      }
-    }
-
-    // Check for predefined events
+    // Check for predefined events first
     const predefinedEvents = {
       'about': { id: 'about', name: 'About', description: 'Information about the project' },
       'experiment-list': { id: 'experiment-list', name: 'Experiment List', description: 'List of available experiments' },
@@ -58,6 +32,35 @@ exports.getEventById = async (req, res) => {
     if (predefinedEvents[eventId]) {
       console.log('Predefined event found:', predefinedEvents[eventId]);
       return res.json(predefinedEvents[eventId]);
+    }
+
+    // If not a predefined event, proceed with the existing logic
+    if (eventId === 'nst') {
+      const experiment = await Experiment.findOne({ name: 'Number Switching Task' });
+      if (experiment) {
+        return res.json({
+          id: experiment._id,
+          nst: 'NumberSwitchingTask',
+          name: experiment.name,
+          description: experiment.description,
+          trials: experiment.trials
+        });
+      } else {
+        const newExperiment = new Experiment({
+          name: 'Number Switching Task',
+          description: 'Cognitive effort experiment',
+          configuration: experimentConfig,
+          trials: generateTrialNumbers(experimentConfig)
+        });
+        await newExperiment.save();
+        return res.json({
+          id: newExperiment._id,
+          nst: 'NumberSwitchingTask',
+          name: newExperiment.name,
+          description: newExperiment.description,
+          trials: newExperiment.trials
+        });
+      }
     }
 
     // If not a predefined event, proceed with database lookup
@@ -78,9 +81,7 @@ exports.getEventById = async (req, res) => {
     console.error('Error fetching event:', error);
     res.status(500).json({ message: 'Error fetching event' });
   }
-};
-
-exports.createEvent = async (req, res) => {
+};exports.createEvent = async (req, res) => {
   try {
     const newEvent = new Event(req.body);
     const savedEvent = await newEvent.save();
@@ -168,3 +169,23 @@ exports.exportExperimentData = async (req, res) => {
   }
 };
 
+
+exports.getExperimentResults = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const experiment = await Experiment.findById(id);
+    if (!experiment) {
+      return res.status(404).json({ message: 'Experiment not found' });
+    }
+    res.json({
+      id: experiment._id,
+      name: experiment.name,
+      description: experiment.description,
+      responses: experiment.responses,
+      // Add any other relevant data you want to include in the results
+    });
+  } catch (error) {
+    winston.error('Error fetching experiment results:', error);
+    res.status(500).json({ message: 'Error fetching experiment results' });
+  }
+};

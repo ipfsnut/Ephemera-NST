@@ -8,7 +8,7 @@ function ExperimentScreen({ experimentType, currentDigit, currentTrialIndex, tot
   const currentEvent = useSelector(state => state.event.currentEvent);
 
   const renderExperiment = () => {
-    if (currentEvent && currentEvent.experimentComponent === 'NumberSwitchingTask') {
+    if (currentEvent && currentEvent.nst === 'NumberSwitchingTask') {
       console.log('Rendering NumberSwitchingTask');
       return (
         <NumberSwitchingTask

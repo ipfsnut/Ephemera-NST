@@ -1,32 +1,17 @@
-Ephemera-NST ObjectId Implementation Plan
+Here's how we could approach it:
 
-Goal: Implement MongoDB ObjectId handling across the application to ensure seamless data management and query efficiency.
+We'd create a single source of truth for the experiment state using Redux.
 
-Files to Update:
-1. backend/controllers/experimentController.js
-2. backend/src/routes/experimentRoutes.js
-3. frontend/src/redux/eventSlice.js
-4. backend/models/Experiment.js
-5. frontend/src/Experiments/NumberSwitchingTask/NumberSwitchingTask.js
-6. backend/src/server.js
-7. frontend/src/utils/cameraManager.js
+The NumberSwitchingTask component would be a container component, responsible for fetching the initial experiment data and rendering the appropriate sub-components based on the current state.
 
-Steps:
-1. Update backend controller to handle both ObjectId and string/numeric IDs
-2. Modify backend routes to ensure proper ID parsing
-3. Adjust frontend Redux actions to work with ObjectId
-4. Verify Experiment model schema for ObjectId compatibility
-5. Update NumberSwitchingTask component to use ObjectId
-6. Ensure server.js supports ObjectId handling if necessary
-7. Modify cameraManager utility to work with ObjectId if it interacts with experiments
+We'd implement a clear state machine for the experiment with distinct states: INITIALIZING, READY, SHOWING_DIGIT, AWAITING_RESPONSE, TRIAL_COMPLETE, and EXPERIMENT_COMPLETE.
 
-Progress Tracking:
-[ ] Step 1
-[ ] Step 2
-[ ] Step 3
-[ ] Step 4
-[ ] Step 5
-[ ] Step 6
-[ ] Step 7
+Each state would correspond to a specific sub-component, ensuring a clean separation of concerns.
 
-This plan will guide our ObjectId implementation, ensuring a thorough and efficient update across our entire application.
+We'd use Redux Toolkit's createAsyncThunk for API calls, handling loading, success, and error states efficiently.
+
+The component would use useSelector to access only the necessary pieces of state, minimizing re-renders.
+
+Transitions between states would be triggered by dispatching actions, ensuring a unidirectional data flow.
+
+This approach aligns with React and Redux best practices, providing a scalable and maintainable structure for managing the complex state of the Number Switching Task experiment.

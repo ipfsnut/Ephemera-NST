@@ -5,7 +5,7 @@ const AboutNSTContent = `
 # About the Number Switching Task
 
 ## Overview
-The Number Switching Task is a cognitive experiment designed to measure participants' ability to switch between different mental sets rapidly. It assesses cognitive flexibility, a crucial component of executive function.
+The Number Switching Task is a cognitive experiment designed to measure participants' ability to switch between different mental sets rapidly. It assesses cognitive effort, a crucial component of executive function.
 
 ## Task Structure
 - Each trial consists of a 15-digit number.
@@ -38,7 +38,7 @@ For each digit presentation, the system records:
 
 ## Purpose
 This task aims to:
-1. Measure cognitive flexibility
+1. Measure cognitive effort
 2. Assess the speed and accuracy of mental set switching
 3. Evaluate how increasing task difficulty affects performance
 

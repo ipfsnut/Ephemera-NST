@@ -36,12 +36,18 @@ const App = () => {
         {status === 'failed' && <div>Error: {error}</div>}
         {console.log('Rendering decision in App:', { status, currentEventId: currentEvent?.id })}
         {status === 'succeeded' && (
-          currentEvent.id === 'experiment-list' ? (
+          currentEvent.nst === 'NumberSwitchingTask' ? (
+            <ExperimentScreen
+              experimentType="NumberSwitchingTask"
+              currentDigit={currentEvent.currentDigit}
+              currentTrialIndex={currentEvent.currentTrialIndex}
+              totalTrials={currentEvent.trials?.length}
+              experimentState={currentEvent.experimentState}
+            />
+          ) : currentEvent.id === 'experiment-list' ? (
             <ExperimentList />
           ) : currentEvent.id === 'about' ? (
             <AboutNST />
-          ) : currentEvent.id === 'nst' ? (
-            <ExperimentScreen experimentType="NumberSwitchingTask" />
           ) : currentEvent.id === 'config' ? (
             <ConfigScreen />
           ) : (

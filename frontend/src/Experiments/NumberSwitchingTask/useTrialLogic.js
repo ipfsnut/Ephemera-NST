@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useReducer, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchEvent, setExperimentState, setCurrentTrial, setCurrentDigit } from '../../redux/eventSlice';
 
-const EXPERIMENT_STATES = {
+export const EXPERIMENT_STATES = {
   INITIALIZING: 'INITIALIZING',
   READY: 'READY',
   SHOWING_DIGIT: 'SHOWING_DIGIT',
@@ -11,90 +11,105 @@ const EXPERIMENT_STATES = {
   EXPERIMENT_COMPLETE: 'EXPERIMENT_COMPLETE'
 };
 
+// Set up the initial state for the local reducer
+const initialState = {
+  trials: [],
+  currentDigitIndex: 0,
+  isLoading: true,
+  experimentState: EXPERIMENT_STATES.INITIALIZING,
+
+};
+
+// Define the reducer function to manage local state
+function reducer(state, action) {
+  switch (action.type) {
+      case 'SET_TRIALS':
+          return { ...state, trials: action.payload, isLoading: false };
+      case 'SET_CURRENT_DIGIT_INDEX':
+          return { ...state, currentDigitIndex: action.payload };
+      case 'RESET_EXPERIMENT':
+          return { ...initialState };
+      default:
+          return state;
+  }
+}
+
 export const useTrialLogic = () => {
-  const [trials, setTrials] = useState([]);
-  const [currentDigitIndex, setCurrentDigitIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  // Set up local state management
+  const [state, localDispatch] = useReducer(reducer, initialState);
+    
+  // Set up Redux dispatch and selectors
   const dispatch = useDispatch();
   const currentEvent = useSelector(state => state.event.currentEvent);
   const experimentState = useSelector(state => state.event.experimentState);
   const currentTrialIndex = useSelector(state => state.event.currentTrialIndex);
   const currentDigit = useSelector(state => state.event.currentDigit);
-  console.log('useTrialLogic hook, currentEvent:', currentEvent);
+    
+  // Use a ref to track if we've already fetched the event
+  const fetchedRef = useRef(false);
 
+  // Effect to fetch the event and set up trials
   useEffect(() => {
-    console.log('currentEvent:', currentEvent);
-    if (!currentEvent) {
+    if (!currentEvent && !fetchedRef.current) {
+      fetchedRef.current = true;
       dispatch(fetchEvent('nst'));
-    }
-  }, [dispatch, currentEvent]);
-
-  useEffect(() => {
-    console.log('useTrialLogic: currentEvent updated', currentEvent);
-    if (currentEvent && currentEvent.trials) {
-      console.log('Setting trials:', currentEvent.trials);
-      setTrials(currentEvent.trials);
-      setIsLoading(false);
+    } else if (currentEvent && currentEvent.trials) {
+      localDispatch({ type: 'SET_TRIALS', payload: currentEvent.trials });
       dispatch(setExperimentState(EXPERIMENT_STATES.READY));
-      console.log('Experiment state set to READY');
-    } else {
-      console.log('currentEvent or trials not available');
     }
   }, [currentEvent, dispatch]);
 
+  // Callback to start the experiment
   const startExperiment = useCallback(() => {
-    console.log('Starting experiment');
-    dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
-    showNextDigit();
+      dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
+      showNextDigit();
   }, [dispatch]);
 
+  // Callback to show the next digit
   const showNextDigit = useCallback(() => {
-    console.log('Showing next digit');
-    if (currentTrialIndex >= trials.length) {
-      dispatch(setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE));
-      return;
-    }
+      console.log('Showing next digit');
+      if (currentTrialIndex >= state.trials.length - 1 && state.currentDigitIndex === 0) {
+          dispatch(setExperimentState(EXPERIMENT_STATES.EXPERIMENT_COMPLETE));
+          return;
+      }
 
-    const currentTrial = trials[currentTrialIndex];
-    console.log('Current trial:', currentTrial);
-    if (!currentTrial || !currentTrial.number) {
-      console.error('Invalid trial data');
-      return;
-    }
+      const currentTrial = state.trials[currentTrialIndex];
+      if (!currentTrial || !currentTrial.number) {
+          console.error('Invalid trial data');
+          return;
+      }
 
-    const digits = currentTrial.number.split('');
-    if (currentDigitIndex < digits.length) {
-      dispatch(setCurrentDigit(digits[currentDigitIndex]));
-      dispatch(setCurrentTrial(currentTrialIndex));
-      dispatch(setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE));
-      setCurrentDigitIndex(prevIndex => prevIndex + 1);
-    } else {
-      dispatch(setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE));
-      setTimeout(() => {
-        dispatch(setCurrentTrial(currentTrialIndex + 1));
-        setCurrentDigitIndex(0);
-        dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
-      }, 1000);
-    }
-  }, [currentTrialIndex, currentDigitIndex, trials, dispatch]);
+      const digits = currentTrial.number.split('');
+      if (state.currentDigitIndex < digits.length) {
+          dispatch(setCurrentDigit(digits[state.currentDigitIndex]));
+          dispatch(setCurrentTrial(currentTrialIndex));
+          dispatch(setExperimentState(EXPERIMENT_STATES.AWAITING_RESPONSE));
+          localDispatch({ type: 'SET_CURRENT_DIGIT_INDEX', payload: state.currentDigitIndex + 1 });
+      } else {
+          dispatch(setExperimentState(EXPERIMENT_STATES.TRIAL_COMPLETE));
+          setTimeout(() => {
+              dispatch(setCurrentTrial(currentTrialIndex + 1));
+              localDispatch({ type: 'SET_CURRENT_DIGIT_INDEX', payload: 0 });
+              dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
+          }, 1000);
+      }
+  }, [currentTrialIndex, state.currentDigitIndex, state.trials, dispatch]);
 
+  // Callback to handle user response
   const handleResponse = useCallback(() => {
-    console.log('Handling response');
-    dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
-    showNextDigit();
+      dispatch(setExperimentState(EXPERIMENT_STATES.SHOWING_DIGIT));
+      showNextDigit();
   }, [dispatch, showNextDigit]);
 
-  useEffect(() => {
-    console.log('isLoading:', isLoading);
-  }, [isLoading]);
-
+  // Return the necessary values and functions
   return {
-    experimentState,
-    currentTrialIndex,
-    currentDigit,
-    startExperiment,
-    handleResponse,
-    trials,
-    isLoading
+      experimentState,
+      currentTrialIndex,
+      currentDigit,
+      startExperiment,
+      handleResponse,
+      trials: state.trials,
+      isLoading: state.isLoading,
+      experimentId: currentEvent?.id,
   };
 };
