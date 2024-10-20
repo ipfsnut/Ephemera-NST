@@ -12,8 +12,14 @@ const ExperimentList = () => {
   }, [dispatch]);
 
   const handleStartExperiment = (experiment) => {
+    console.log('Starting experiment:', experiment);
     dispatch(setCurrentExperiment(experiment));
     dispatch(setCurrentView('EXPERIMENT'));
+  };
+
+  const handleAboutClick = (experiment) => {
+    dispatch(setCurrentExperiment(experiment));
+    dispatch(setCurrentView('ABOUT'));
   };
 
   if (status === 'loading') return <div>Loading experiments...</div>;
@@ -26,7 +32,7 @@ const ExperimentList = () => {
         {experiments.map(experiment => (
           <li key={experiment._id}>
             {experiment.name}
-            <button onClick={() => dispatch(setCurrentView('ABOUT'))}>About</button>
+            <button onClick={() => handleAboutClick(experiment)}>About</button>
             <button onClick={() => dispatch(setCurrentView('CONFIG'))}>Config</button>
             <button onClick={() => handleStartExperiment(experiment)}>Start Experiment</button>
           </li>
@@ -34,6 +40,4 @@ const ExperimentList = () => {
       </ul>
     </div>
   );
-};
-
-export default ExperimentList;
+};export default ExperimentList;

@@ -20,6 +20,7 @@ const globalStateSlice = createSlice({
     // Updates the current view/route
     // Dispatched when navigating between different sections of the app
     setCurrentView: (state, action) => {
+      console.log('Current view changed to:', action.payload);
       state.currentView = action.payload;
     },
     // Sets a global error

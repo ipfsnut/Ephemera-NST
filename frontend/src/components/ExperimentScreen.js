@@ -2,8 +2,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import NumberSwitchingTask from '../Experiments/NumberSwitchingTask/NumberSwitchingTask';
 
-function ExperimentScreen({ experiment }) {
-  console.log('ExperimentScreen props:', { experiment });
+const ExperimentScreen = ({ experiment }) => {
+  console.log('ExperimentScreen received experiment:', experiment);
 
   const renderExperiment = () => {
     if (experiment && experiment.name === 'Number Switching Task') {

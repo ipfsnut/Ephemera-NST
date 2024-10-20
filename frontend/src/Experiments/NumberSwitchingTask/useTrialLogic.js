@@ -21,33 +21,39 @@ export default function useTrialLogic(experiment) {
     }
   }, [experiment]);
 
+  const showNextDigit = useCallback(() => {
+    if (currentTrialIndex < trials.length) {
+      dispatch(setExperimentState('SHOWING_DIGIT'));
+      dispatch(setCurrentDigit(trials[currentTrialIndex].digit));
+      trials[currentTrialIndex].startTime = Date.now();
+    } else {
+      dispatch(setExperimentState('EXPERIMENT_COMPLETE'));
+    }
+  }, [currentTrialIndex, dispatch, trials]);
+
   const startExperiment = useCallback(() => {
     if (trials.length > 0) {
-      dispatch(setExperimentState('SHOWING_DIGIT'));
-      dispatch(setCurrentDigit(trials[0].digit));
-      setCurrentTrialIndex(0);
+      showNextDigit();
     }
-  }, [dispatch, trials]);
+  }, [showNextDigit, trials]);
 
   const handleResponse = useCallback((key) => {
     if (currentTrialIndex < trials.length) {
       const currentTrial = trials[currentTrialIndex];
+      const isCorrect = (currentTrial.digit % 2 === 0 && key === 'j') || 
+                        (currentTrial.digit % 2 !== 0 && key === 'f');
       const response = {
         digit: currentTrial.digit,
         response: key,
         responseTime: Date.now() - currentTrial.startTime,
+        isCorrect: isCorrect
       };
       dispatch(addResponse(response));
 
-      if (currentTrialIndex < trials.length - 1) {
-        setCurrentTrialIndex(prevIndex => prevIndex + 1);
-        dispatch(setExperimentState('SHOWING_DIGIT'));
-        dispatch(setCurrentDigit(trials[currentTrialIndex + 1].digit));
-      } else {
-        dispatch(setExperimentState('EXPERIMENT_COMPLETE'));
-      }
+      setCurrentTrialIndex(prevIndex => prevIndex + 1);
+      showNextDigit();
     }
-  }, [currentTrialIndex, dispatch, trials]);
+  }, [currentTrialIndex, dispatch, trials, showNextDigit]);
 
   useEffect(() => {
     initializeTrials();

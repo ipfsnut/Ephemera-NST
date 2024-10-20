@@ -14,6 +14,8 @@ router.delete('/events/:id', eventController.deleteEvent);
 
 //Experiment-List route
 router.get('/experiments', eventController.getAllExperiments);
+router.get('/experiments/:experimentId/about', eventController.getExperimentAbout);
+
 
 // NST-specific routes
 router.post('/experiments/nst', eventController.generateNSTExperiment);
@@ -26,3 +28,4 @@ router.get('/experiments/:id/export', eventController.exportExperimentData);
 router.get('/experiments/:id/results', eventController.getExperimentResults);
 
 module.exports = router;
+

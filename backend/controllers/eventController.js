@@ -235,3 +235,16 @@ exports.getAllExperiments = async (req, res) => {
     res.status(500).json({ message: 'Error fetching experiments' });
   }
 };
+
+exports.getExperimentAbout = async (req, res) => {
+  const { experimentId } = req.params;
+  try {
+    const experiment = await Experiment.findById(experimentId);
+    if (!experiment) {
+      return res.status(404).json({ message: 'Experiment not found' });
+    }
+    res.json({ about: experiment.about });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching experiment about information' });
+  }
+};
