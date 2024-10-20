@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setAppState } from '../../redux/globalState';
-import { setExperimentState, selectExperimentState } from '../../redux/eventSlice';
+import { setExperimentState, selectExperimentState, initializeExperiment } from '../../redux/eventSlice';
 import { EXPERIMENT_STATES } from '../../utils/constants';
-import ExperimentScreen from '../../components/ExperimentScreen';
 import useTrialLogic from './useTrialLogic';
-import { initialConfig } from './config';
 
-const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
+const NumberSwitchingTask = React.memo(function NumberSwitchingTask({ experiment }) {
   const dispatch = useDispatch();
-  const config = useSelector(state => state.config.currentConfig) || initialConfig;
   const { experimentState, currentTrialIndex, currentDigit, totalTrials } = useSelector(selectExperimentState);
-  const { startExperiment, handleResponse, isLoading, experimentId, trials } = useTrialLogic();
+  const config = experiment.configuration;
+
+  const { startExperiment, handleResponse, isLoading, experimentId, trials } = useTrialLogic(experiment);
 
   const handleKeyPress = useCallback((event) => {
     if (experimentState === 'AWAITING_RESPONSE') {
@@ -22,7 +21,11 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
       dispatch(setExperimentState('SHOWING_DIGIT'));
       startExperiment();
     }
-  }, [experimentState, config.KEYS, handleResponse, startExperiment, dispatch]);
+  }, [experimentState, config, handleResponse, startExperiment, dispatch]);
+
+  useEffect(() => {
+    dispatch(initializeExperiment(experiment));
+  }, [dispatch, experiment]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
@@ -31,16 +34,15 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
 
   useEffect(() => {
     console.log('experimentState:', experimentState);
-    if (trials.length > 0 && experimentState === 'READY' && currentTrialIndex === 0) {
+    if (experiment.trials.length > 0 && experimentState === 'READY' && currentTrialIndex === 0) {
       startExperiment();
     }
-  }, [trials, experimentState, startExperiment, currentTrialIndex]);
+  }, [experiment, experimentState, startExperiment, currentTrialIndex]);
 
   useEffect(() => {
     dispatch(setAppState('EXPERIMENT_RUNNING'));
     return () => dispatch(setAppState('READY'));
   }, [dispatch]);
-
   if (experimentState === EXPERIMENT_STATES.INITIALIZING) {
     return <div>Initializing experiment...</div>;
   }
@@ -52,18 +54,18 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
       {experimentState !== EXPERIMENT_STATES.EXPERIMENT_COMPLETE ? (
-        <ExperimentScreen
-          experimentType="NumberSwitchingTask"
-          currentDigit={currentDigit}
-          currentTrialIndex={currentTrialIndex}
-          totalTrials={totalTrials}
-          experimentState={experimentState}
-        />
+        <div>
+          <h2>Number Switching Task</h2>
+          <p>Current Digit: {currentDigit}</p>
+          <p>Trial: {currentTrialIndex + 1} / {totalTrials}</p>
+          <p>State: {experimentState}</p>
+        </div>
       ) : (
         <div>Experiment Complete</div>
       )}
     </div>
   );
 });
+
 
 export default NumberSwitchingTask;

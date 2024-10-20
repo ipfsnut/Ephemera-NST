@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchExperiments } from '../redux/eventSlice';
+import { setCurrentView, setCurrentExperiment } from '../redux/globalState';
 
 const ExperimentList = () => {
   const dispatch = useDispatch();
@@ -10,6 +11,11 @@ const ExperimentList = () => {
     dispatch(fetchExperiments());
   }, [dispatch]);
 
+  const handleStartExperiment = (experiment) => {
+    dispatch(setCurrentExperiment(experiment));
+    dispatch(setCurrentView('EXPERIMENT'));
+  };
+
   if (status === 'loading') return <div>Loading experiments...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -18,7 +24,12 @@ const ExperimentList = () => {
       <h2>Available Experiments</h2>
       <ul>
         {experiments.map(experiment => (
-          <li key={experiment.id}>{experiment.name}</li>
+          <li key={experiment._id}>
+            {experiment.name}
+            <button onClick={() => dispatch(setCurrentView('ABOUT'))}>About</button>
+            <button onClick={() => dispatch(setCurrentView('CONFIG'))}>Config</button>
+            <button onClick={() => handleStartExperiment(experiment)}>Start Experiment</button>
+          </li>
         ))}
       </ul>
     </div>

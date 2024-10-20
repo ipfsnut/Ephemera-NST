@@ -1,4 +1,3 @@
-
 import { createSlice } from '@reduxjs/toolkit';
 
 // Initial state defines the structure of our global application state
@@ -6,6 +5,7 @@ const initialState = {
   appState: 'INITIALIZING', // Tracks the overall application state
   currentView: 'HOME', // Manages which view/route is currently active
   error: null, // Stores any global errors that occur
+  currentExperiment: null, // Add this line to track the current experiment
 };
 
 const globalStateSlice = createSlice({
@@ -32,11 +32,20 @@ const globalStateSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setCurrentExperiment: (state, action) => {
+      state.currentExperiment = action.payload;
+    },
   },
 });
 
 // Export action creators for use in components and other slices
-export const { setAppState, setCurrentView, setError, clearError } = globalStateSlice.actions;
+export const { 
+  setAppState, 
+  setCurrentView, 
+  setError, 
+  clearError, 
+  setCurrentExperiment 
+} = globalStateSlice.actions;
 
 // Export the reducer to be combined in the root reducer
 export default globalStateSlice.reducer;

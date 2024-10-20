@@ -2,23 +2,13 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import NumberSwitchingTask from '../Experiments/NumberSwitchingTask/NumberSwitchingTask';
 
-function ExperimentScreen({ experimentType, currentDigit, currentTrialIndex, totalTrials, experimentState }) {
-  console.log('ExperimentScreen props:', { experimentType, currentDigit, currentTrialIndex, totalTrials, experimentState });
-  const config = useSelector(state => state.config);
-  const currentEvent = useSelector(state => state.event.currentEvent);
+function ExperimentScreen({ experiment }) {
+  console.log('ExperimentScreen props:', { experiment });
 
   const renderExperiment = () => {
-    if (currentEvent && currentEvent.nst === 'NumberSwitchingTask') {
+    if (experiment && experiment.name === 'Number Switching Task') {
       console.log('Rendering NumberSwitchingTask');
-      return (
-        <NumberSwitchingTask
-          config={config}
-          currentDigit={currentDigit}
-          currentTrialIndex={currentTrialIndex}
-          totalTrials={totalTrials}
-          experimentState={experimentState}
-        />
-      );
+      return <NumberSwitchingTask experiment={experiment} />;
     }
     console.log('Experiment not found');
     return <div>Experiment not found</div>;
@@ -33,5 +23,4 @@ function ExperimentScreen({ experimentType, currentDigit, currentTrialIndex, tot
     </div>
   );
 }
-
 export default ExperimentScreen;

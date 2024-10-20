@@ -2,33 +2,32 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setAppState, setCurrentView } from './redux/globalState';
 import ExperimentList from './components/ExperimentList';
-import NumberSwitchingTask from './Experiments/NumberSwitchingTask/NumberSwitchingTask';
+import ExperimentScreen from './components/ExperimentScreen';
 import About from './components/About';
 
 function App() {
   const dispatch = useDispatch();
-  const { appState, currentView } = useSelector(state => state.globalState);
+  const { appState, currentView, currentExperiment } = useSelector(state => state.globalState);
 
   useEffect(() => {
     dispatch(setAppState('READY'));
   }, [dispatch]);
 
-  const renderView = () => {
+  const renderContent = () => {
     switch (currentView) {
       case 'HOME':
         return (
           <div>
-            <h1>Ephemera-NST</h1>
-            <button onClick={() => dispatch(setCurrentView('ABOUT'))}>About</button>
-            <button onClick={() => dispatch(setCurrentView('EXPERIMENT_LIST'))}>Experiment List</button>
+            <h2>Welcome to Ephemera-NST</h2>
+            <p>Select an experiment from the Experiment List to begin.</p>
           </div>
         );
       case 'ABOUT':
         return <About />;
       case 'EXPERIMENT_LIST':
         return <ExperimentList />;
-      case 'NUMBER_SWITCHING_TASK':
-        return <NumberSwitchingTask />;
+      case 'EXPERIMENT':
+        return <ExperimentScreen experiment={currentExperiment} />;
       default:
         return <div>Invalid view</div>;
     }
@@ -36,13 +35,19 @@ function App() {
 
   return (
     <div className="App">
+      <header>
+        <h1>Ephemera-NST</h1>
+        <nav>
+          <button onClick={() => dispatch(setCurrentView('HOME'))}>Home</button>
+          <button onClick={() => dispatch(setCurrentView('ABOUT'))}>About</button>
+          <button onClick={() => dispatch(setCurrentView('EXPERIMENT_LIST'))}>Experiment List</button>
+        </nav>
+      </header>
       {appState === 'INITIALIZING' ? (
         <div>Loading...</div>
       ) : (
-        renderView()
+        renderContent()
       )}
     </div>
   );
-}
-
-export default App;
+}export default App;
