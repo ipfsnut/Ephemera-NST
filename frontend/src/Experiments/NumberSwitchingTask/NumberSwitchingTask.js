@@ -1,24 +1,15 @@
 import React, { useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { createSelector } from 'reselect';
-import { setExperimentState, setCurrentTrial, setCurrentDigit } from '../../redux/eventSlice';
+import { setAppState } from '../../redux/globalState';
+import { setExperimentState, selectExperimentState } from '../../redux/eventSlice';
+import { EXPERIMENT_STATES } from '../../utils/constants';
 import ExperimentScreen from '../../components/ExperimentScreen';
-import { useTrialLogic, EXPERIMENT_STATES } from './useTrialLogic';
-import ResultsView from './ResultsView';
-
-const selectExperimentState = createSelector(
-  state => state.event,
-  event => ({
-    experimentState: event.experimentState,
-    currentTrialIndex: event.currentTrialIndex,
-    currentDigit: event.currentDigit,
-    totalTrials: event.trials.length
-  })
-);
+import useTrialLogic from './useTrialLogic';
+import { initialConfig } from './config';
 
 const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
   const dispatch = useDispatch();
-  const config = useSelector(state => state.config.currentConfig);
+  const config = useSelector(state => state.config.currentConfig) || initialConfig;
   const { experimentState, currentTrialIndex, currentDigit, totalTrials } = useSelector(selectExperimentState);
   const { startExperiment, handleResponse, isLoading, experimentId, trials } = useTrialLogic();
 
@@ -45,6 +36,11 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
     }
   }, [trials, experimentState, startExperiment, currentTrialIndex]);
 
+  useEffect(() => {
+    dispatch(setAppState('EXPERIMENT_RUNNING'));
+    return () => dispatch(setAppState('READY'));
+  }, [dispatch]);
+
   if (experimentState === EXPERIMENT_STATES.INITIALIZING) {
     return <div>Initializing experiment...</div>;
   }
@@ -64,9 +60,10 @@ const NumberSwitchingTask = React.memo(function NumberSwitchingTask() {
           experimentState={experimentState}
         />
       ) : (
-        <ResultsView experimentId={experimentId} />
+        <div>Experiment Complete</div>
       )}
     </div>
-  );});
+  );
+});
 
 export default NumberSwitchingTask;

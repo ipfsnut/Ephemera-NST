@@ -1,61 +1,48 @@
-import React, { useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import EventButton from './components/EventButton';
-import EventDisplay from './components/EventDisplay';
+import { setAppState, setCurrentView } from './redux/globalState';
 import ExperimentList from './components/ExperimentList';
-import AboutNST from './Experiments/NumberSwitchingTask/AboutNST';
-import ExperimentScreen from './components/ExperimentScreen';
-import ConfigScreen from './components/ConfigScreen';
-import { fetchEvent } from './redux/eventSlice';
+import NumberSwitchingTask from './Experiments/NumberSwitchingTask/NumberSwitchingTask';
+import About from './components/About';
 
-
-
-const App = () => {
+function App() {
   const dispatch = useDispatch();
-  const { currentEvent, status, error, cachedEvents } = useSelector(state => state.event);
+  const { appState, currentView } = useSelector(state => state.globalState);
 
-  const handleEventClick = useCallback((eventId) => {
-    if (!cachedEvents[eventId]) {
-      dispatch(fetchEvent(eventId));
+  useEffect(() => {
+    dispatch(setAppState('READY'));
+  }, [dispatch]);
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'HOME':
+        return (
+          <div>
+            <h1>Ephemera-NST</h1>
+            <button onClick={() => dispatch(setCurrentView('ABOUT'))}>About</button>
+            <button onClick={() => dispatch(setCurrentView('EXPERIMENT_LIST'))}>Experiment List</button>
+          </div>
+        );
+      case 'ABOUT':
+        return <About />;
+      case 'EXPERIMENT_LIST':
+        return <ExperimentList />;
+      case 'NUMBER_SWITCHING_TASK':
+        return <NumberSwitchingTask />;
+      default:
+        return <div>Invalid view</div>;
     }
-  }, [dispatch, cachedEvents]);
-  console.log('Current event in App:', currentEvent);
+  };
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Ephemera</h1>
-        <nav>
-          <EventButton id="about" label="About" onClick={() => handleEventClick('about')} />
-          <EventButton id="experiment-list" label="Experiment List" onClick={() => handleEventClick('experiment-list')} />
-          <EventButton id="literature" label="Literature" onClick={() => handleEventClick('literature')} />
-        </nav>
-      </header>
-      <main>
-        {status === 'loading' && <div>Loading...</div>}
-        {status === 'failed' && <div>Error: {error}</div>}
-        {console.log('Rendering decision in App:', { status, currentEventId: currentEvent?.id })}
-        {status === 'succeeded' && (
-          currentEvent.nst === 'NumberSwitchingTask' ? (
-            <ExperimentScreen
-              experimentType="NumberSwitchingTask"
-              currentDigit={currentEvent.currentDigit}
-              currentTrialIndex={currentEvent.currentTrialIndex}
-              totalTrials={currentEvent.trials?.length}
-              experimentState={currentEvent.experimentState}
-            />
-          ) : currentEvent.id === 'experiment-list' ? (
-            <ExperimentList />
-          ) : currentEvent.id === 'about' ? (
-            <AboutNST />
-          ) : currentEvent.id === 'config' ? (
-            <ConfigScreen />
-          ) : (
-            <EventDisplay event={currentEvent} />
-          )
-        )}
-      </main>
+    <div className="App">
+      {appState === 'INITIALIZING' ? (
+        <div>Loading...</div>
+      ) : (
+        renderView()
+      )}
     </div>
-  );};
+  );
+}
 
 export default App;

@@ -26,8 +26,4 @@ export const trialService = {
   saveTrialResponse: (experimentId, data) => api.post(`/api/experiments/${experimentId}/responses`, data),
 };
 
-export default {
-  experimentService,
-  configService,
-  trialService,
-};
+export { api };

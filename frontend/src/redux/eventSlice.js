@@ -1,112 +1,102 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-const API_BASE_URL = window.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
-
-export const fetchEvent = createAsyncThunk(
-  'event/fetchEvent',
-  async (id, { getState }) => {
-    const { event } = getState();
-    if (event.cachedEvents[id]) {
-      return event.cachedEvents[id];
-    }
-    const response = await axios.get(`${API_BASE_URL}/events/${id}`);
-    return response.data;
-  }
-);
-
-export const generateExperiment = createAsyncThunk(
-  'event/generateExperiment',
-  async (currentConfig) => {
-    const response = await axios.post(`${API_BASE_URL}/events/generate`, { currentConfig });
-    return response.data;
-  }
-);
-
-export const saveExperimentResponse = createAsyncThunk(
-  'event/saveExperimentResponse',
-  async ({ id, responseData }) => {
-    const response = await axios.post(`${API_BASE_URL}/events/${id}/responses`, responseData);
-    return response.data;
-  }
-);
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { api } from '../services/api';
 
 const initialState = {
-  currentEvent: null,
+  experiments: [],
+  currentExperiment: null,
   status: 'idle',
   error: null,
-  cachedEvents: {},
-  trials: [],
   experimentState: 'INITIALIZING',
   currentTrialIndex: 0,
   currentDigit: null,
   responses: []
 };
 
+export const fetchExperiments = createAsyncThunk(
+  'event/fetchExperiments',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/api/events/experiments');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching experiments:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchExperiment = createAsyncThunk(
+  'event/fetchExperiment',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/api/events/experiments/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching experiment:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchAboutInfo = createAsyncThunk(
+  'event/fetchAboutInfo',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/api/events/about');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const eventSlice = createSlice({
   name: 'event',
   initialState,
   reducers: {
     setExperimentState: (state, action) => {
-      if (state.experimentState !== action.payload) {
-        state.experimentState = action.payload;
-      }
-    },
-    setCurrentTrial: (state, action) => {
-      state.currentTrialIndex = action.payload;
+      state.experimentState = action.payload;
     },
     setCurrentDigit: (state, action) => {
       state.currentDigit = action.payload;
     },
     addResponse: (state, action) => {
       state.responses.push(action.payload);
-    }
+    },
+    resetExperiment: (state) => {
+      state.currentTrialIndex = 0;
+      state.responses = [];
+      state.experimentState = 'INITIALIZING';
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchEvent.pending, (state) => {
+      .addCase(fetchExperiments.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(fetchEvent.fulfilled, (state, action) => {
+      .addCase(fetchExperiments.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.currentEvent = action.payload;
-        state.cachedEvents[action.payload.id] = action.payload;
-        if (action.payload.trials) {
-          state.trials = action.payload.trials;
-        }
-        state.experimentState = 'READY';
+        state.experiments = action.payload;
       })
-      .addCase(fetchEvent.rejected, (state, action) => {
+      .addCase(fetchExperiments.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message;
+        state.error = action.payload;
       })
-      .addCase(generateExperiment.fulfilled, (state, action) => {
-        state.currentEvent = action.payload;
-        state.cachedEvents[action.payload.id] = action.payload;
-        state.trials = action.payload.trials;
-        state.experimentState = 'READY';
+      .addCase(fetchExperiment.pending, (state) => {
+        state.status = 'loading';
       })
-      .addCase(saveExperimentResponse.fulfilled, (state, action) => {
-        // Handle successful response save if needed
+      .addCase(fetchExperiment.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentExperiment = action.payload;
+      })
+      .addCase(fetchExperiment.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       });
-  }
+  },
 });
 
-export const { setExperimentState, setCurrentTrial, setCurrentDigit, addResponse } = eventSlice.actions;
+export const { setExperimentState, setCurrentDigit, addResponse, resetExperiment } = eventSlice.actions;
 
-// Selectors
-export const selectCurrentEvent = state => state.event.currentEvent;
-export const selectExperimentState = state => state.event.experimentState;
-export const selectCurrentTrial = state => state.event.trials[state.event.currentTrialIndex];
-export const selectCurrentDigit = state => state.event.currentDigit;
-export const selectTrialProgress = createSelector(
-  state => state.event.currentTrialIndex,
-  state => state.event.trials.length,
-  (currentIndex, totalTrials) => ({
-    current: currentIndex + 1,
-    total: totalTrials,
-    percentage: ((currentIndex + 1) / totalTrials) * 100
-  })
-);
-
+export const selectExperimentState = (state) => state.event.experimentState;
 export default eventSlice.reducer;

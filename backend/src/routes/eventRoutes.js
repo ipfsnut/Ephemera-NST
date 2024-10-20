@@ -1,37 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const eventController = require('../../controllers/eventController');
-const { generateTrialNumbers } = require('../../utils/markovChain');
 
-router.get('/', eventController.getAllEvents);
-router.post('/', eventController.createEvent);
-router.post('/generate', eventController.generateExperiment);
-router.post('/generate-trials', (req, res) => {
-  console.log('Received request to generate trials');
-  const { currentConfig } = req.body;
-  console.log('Config received:', currentConfig);
+// Home and general routes
+router.get('/about', eventController.getAboutInfo);
+router.get('/events', eventController.getAllEvents);
 
-  if (!currentConfig || !currentConfig.DIFFICULTY_LEVELS || !currentConfig.numTrials) {
-    console.error('Invalid config object received');
-    return res.status(400).json({ error: 'Invalid configuration' });
-  }
+// Event-specific routes
+router.get('/events/:id', eventController.getEventById);
+router.post('/events', eventController.createEvent);
+router.put('/events/:id', eventController.updateEvent);
+router.delete('/events/:id', eventController.deleteEvent);
 
-  try {
-    const trials = generateTrialNumbers(currentConfig);
-    console.log('Trials generated successfully');
-    res.json(trials);
-  } catch (error) {
-    console.error('Error generating trials:', error);
-    res.status(500).json({ error: 'Failed to generate trials' });
-  }
-});
+//Experiment-List route
+router.get('/experiments', eventController.getAllExperiments);
 
-router.get('/:id/export', eventController.exportExperimentData);
-router.post('/:id/responses', eventController.saveExperimentResponse);
-router.get('/:id/results', eventController.getExperimentResults);
+// NST-specific routes
+router.post('/experiments/nst', eventController.generateNSTExperiment);
+router.post('/experiments/:id/response', eventController.saveExperimentResponse);
 
-router.get('/:id', eventController.getEventById);
-router.put('/:id', eventController.updateEvent);
-router.delete('/:id', eventController.deleteEvent);
+// Data export route
+router.get('/experiments/:id/export', eventController.exportExperimentData);
+
+// Experiment results route
+router.get('/experiments/:id/results', eventController.getExperimentResults);
 
 module.exports = router;

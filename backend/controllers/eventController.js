@@ -1,9 +1,11 @@
 const Event = require('../models/Event');
 const Experiment = require('../models/Experiment');
 const winston = require('winston');
-const { generateTrialNumbers } = require('../utils/markovChain');
+const { generateNSTTrials, handleNSTResponse, isNSTComplete } = require('../src/experimentLogic/nstLogic');
 const { generateCSV, createZip } = require('../utils/dataExport');
 const experimentConfig = require('../config');
+const fs = require('fs').promises;
+const path = require('path');
 
 
 exports.getAllEvents = async (req, res) => {
@@ -81,7 +83,9 @@ exports.getEventById = async (req, res) => {
     console.error('Error fetching event:', error);
     res.status(500).json({ message: 'Error fetching event' });
   }
-};exports.createEvent = async (req, res) => {
+};
+
+exports.createEvent = async (req, res) => {
   try {
     const newEvent = new Event(req.body);
     const savedEvent = await newEvent.save();
@@ -118,21 +122,41 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
-exports.generateExperiment = async (req, res) => {
+exports.generateNSTExperiment = async (req, res) => {
   try {
-    const { currentConfig } = req.body;
-    const trials = generateTrialNumbers(currentConfig);
+    const trials = generateNSTTrials();
     const newExperiment = new Experiment({
-      name: 'Generated Experiment',
-      description: 'Automatically generated experiment',
-      configuration: currentConfig,
+      name: 'Number Switching Task',
+      description: 'Cognitive effort experiment',
+      type: 'NST',
+      configuration: experimentConfig,
       trials: trials
     });
     const savedExperiment = await newExperiment.save();
     res.json(savedExperiment);
   } catch (error) {
-    winston.error('Error generating experiment:', error);
-    res.status(500).json({ message: 'Error generating experiment' });
+    winston.error('Error generating NST experiment:', error);
+    res.status(500).json({ message: 'Error generating NST experiment' });
+  }
+};
+
+exports.handleNSTResponse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { response, currentTrial } = req.body;
+    const experiment = await Experiment.findById(id);
+    if (!experiment) {
+      return res.status(404).json({ message: 'Experiment not found' });
+    }
+    const processedResponse = handleNSTResponse(response, currentTrial);
+    experiment.responses.push(processedResponse);
+    await experiment.save();
+    
+    const isComplete = isNSTComplete(experiment.responses.length, experiment.trials.length);
+    res.json({ processedResponse, isComplete });
+  } catch (error) {
+    winston.error('Error handling NST response:', error);
+    res.status(500).json({ message: 'Error handling NST response' });
   }
 };
 
@@ -187,5 +211,27 @@ exports.getExperimentResults = async (req, res) => {
   } catch (error) {
     winston.error('Error fetching experiment results:', error);
     res.status(500).json({ message: 'Error fetching experiment results' });
+  }
+};
+
+
+exports.getAboutInfo = async (req, res) => {
+  try {
+    const aboutPath = path.join(__dirname, '..', 'utils', 'About.md');
+    const aboutContent = await fs.readFile(aboutPath, 'utf8');
+    res.json({ content: aboutContent });
+  } catch (error) {
+    console.error('Error reading About.md:', error);
+    res.status(500).json({ message: 'Error fetching About information' });
+  }
+};
+
+exports.getAllExperiments = async (req, res) => {
+  try {
+    const experiments = await Experiment.find();
+    res.json(experiments);
+  } catch (error) {
+    winston.error('Error fetching experiments:', error);
+    res.status(500).json({ message: 'Error fetching experiments' });
   }
 };

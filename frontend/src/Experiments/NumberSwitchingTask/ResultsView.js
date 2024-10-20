@@ -1,63 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
+import { useSelector } from 'react-redux';
 
-function ResultsView({ experimentId }) {
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const ResultsView = () => {
+  const responses = useSelector(state => state.event.responses);
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        const response = await axios.get(`/api/experiments/${experimentId}/results`);
-        setResults(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch results');
-        setLoading(false);
-      }
-    };
-
-    fetchResults();
-  }, [experimentId]);
-
-  const handleExport = async () => {
-    try {
-      const response = await axios.get(`/api/experiments/${experimentId}/export`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'experiment_results.csv');
-      document.body.appendChild(link);
-      link.click();
-    } catch (err) {
-      console.error('Failed to export results', err);
-    }
+  const calculateAverageResponseTime = () => {
+    if (responses.length === 0) return 0;
+    const totalTime = responses.reduce((sum, response) => sum + response.responseTime, 0);
+    return totalTime / responses.length;
   };
 
-  if (loading) return <div>Loading results...</div>;
-  if (error) return <div>{error}</div>;
-  if (!results) return <div>No results available</div>;
+  const calculateAccuracy = () => {
+    if (responses.length === 0) return 0;
+    const correctResponses = responses.filter(response => 
+      (response.digit % 2 === 0 && response.response === 'j') || 
+      (response.digit % 2 !== 0 && response.response === 'f')
+    );
+    return (correctResponses.length / responses.length) * 100;
+  };
 
   return (
     <div className="results-view">
-      <h2>Experiment Results</h2>
-      <div className="results-summary">
-        <p>Total Trials: {results.totalTrials}</p>
-        <p>Correct Trials: {results.correctTrials}</p>
-      </div>
-      <div className="results-list">
-        {results.trials.map((trial, index) => (
-          <div key={index} className="trial-result">
-            <h3>Trial {index + 1}</h3>
-            <p>Correct: {trial.correct ? 'Yes' : 'No'}</p>
-            <p>Response Time: {trial.responseTime}ms</p>
-          </div>
+      <h2>Number Switching Task Results</h2>
+      <p>Total Trials: {responses.length}</p>
+      <p>Average Response Time: {calculateAverageResponseTime().toFixed(2)} ms</p>
+      <p>Accuracy: {calculateAccuracy().toFixed(2)}%</p>
+      <h3>Response Details:</h3>
+      <ul>
+        {responses.map((response, index) => (
+          <li key={index}>
+            Digit: {response.digit}, 
+            Response: {response.response}, 
+            Time: {response.responseTime} ms
+          </li>
         ))}
-      </div>
-      <button onClick={handleExport} className="export-button">Export Data</button>
+      </ul>
     </div>
   );
-}
+};
 
 export default ResultsView;
