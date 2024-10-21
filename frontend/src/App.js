@@ -26,8 +26,10 @@ function App() {
         return <About />;
       case 'EXPERIMENT_LIST':
         return <ExperimentList />;
-      case 'EXPERIMENT':
-        return <ExperimentScreen experiment={currentExperiment} />;
+          case 'EXPERIMENT':
+            return <ExperimentScreen experiment={currentExperiment} />;
+          case 'CONFIG':
+            return <ConfigScreen />;
       default:
         return <div>Invalid view</div>;
     }

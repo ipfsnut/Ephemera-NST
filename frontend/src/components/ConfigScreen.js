@@ -10,11 +10,12 @@ const ConfigScreen = () => {
 
   const handleCustomSubmit = useCallback((e) => {
     e.preventDefault();
-    dispatch(updateConfig({ 
-      numTrials: parseInt(numTrials, 10), 
-      difficultyLevel, 
-      isCustom: true 
+    dispatch(updateConfig({
+      numTrials: parseInt(numTrials, 10),
+      difficultyLevel,
+      isCustom: true
     }));
+    dispatch(setCurrentView('EXPERIMENT_LIST')); // or 'EXPERIMENT' if you want to start immediately
   }, [dispatch, numTrials, difficultyLevel]);
 
   const handleNumTrialsChange = (e) => {

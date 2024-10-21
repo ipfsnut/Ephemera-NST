@@ -33,7 +33,10 @@ const ExperimentList = () => {
           <li key={experiment._id}>
             {experiment.name}
             <button onClick={() => handleAboutClick(experiment)}>About</button>
-            <button onClick={() => dispatch(setCurrentView('CONFIG'))}>Config</button>
+            <button onClick={() => {
+  dispatch(setCurrentExperiment(experiment));
+  dispatch(setCurrentView('CONFIG'));
+}}>Config</button>
             <button onClick={() => handleStartExperiment(experiment)}>Start Experiment</button>
           </li>
         ))}

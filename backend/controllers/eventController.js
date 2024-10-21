@@ -262,3 +262,26 @@ exports.updateTrialIndex = async (req, res) => {
     res.status(500).json({ message: 'Error updating trial index', error: error.message });
   }
 };
+
+exports.updateExperimentConfig = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { numTrials, difficultyLevel } = req.body;
+    const experiment = await Experiment.findByIdAndUpdate(id, 
+      { 
+        configuration: { 
+          numTrials, 
+          difficultyLevel,
+          ...experimentConfig // Spread the default config
+        } 
+      },
+      { new: true }
+    );
+    if (!experiment) {
+      return res.status(404).json({ message: 'Experiment not found' });
+    }
+    res.json({ message: 'Experiment configuration updated successfully', experiment });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating experiment configuration', error: error.message });
+  }
+};
