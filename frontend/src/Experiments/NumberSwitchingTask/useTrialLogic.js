@@ -7,14 +7,14 @@ export default function useTrialLogic(experiment) {
   const [isLoading, setIsLoading] = useState(true);
   const [trials, setTrials] = useState([]);
   const [currentTrialIndex, setCurrentTrialIndex] = useState(0);
+  const [currentDigitIndex, setCurrentDigitIndex] = useState(0);
 
   const initializeTrials = useCallback(() => {
     if (experiment && experiment.trials && experiment.trials.length > 0) {
       const formattedTrials = experiment.trials.map(trial => ({
-        digit: parseInt(trial.number),
+        digits: trial.number.toString().split('').map(Number),
+        responses: [],
         startTime: null,
-        response: null,
-        responseTime: null,
       }));
       setTrials(formattedTrials);
       setIsLoading(false);
@@ -23,13 +23,22 @@ export default function useTrialLogic(experiment) {
 
   const showNextDigit = useCallback(() => {
     if (currentTrialIndex < trials.length) {
-      dispatch(setExperimentState('SHOWING_DIGIT'));
-      dispatch(setCurrentDigit(trials[currentTrialIndex].digit));
-      trials[currentTrialIndex].startTime = Date.now();
+      const currentTrial = trials[currentTrialIndex];
+      if (currentDigitIndex < currentTrial.digits.length) {
+        dispatch(setExperimentState('SHOWING_DIGIT'));
+        dispatch(setCurrentDigit(currentTrial.digits[currentDigitIndex]));
+        if (currentDigitIndex === 0) {
+          currentTrial.startTime = Date.now();
+        }
+      } else {
+        setCurrentTrialIndex(prevIndex => prevIndex + 1);
+        setCurrentDigitIndex(0);
+        showNextDigit();
+      }
     } else {
       dispatch(setExperimentState('EXPERIMENT_COMPLETE'));
     }
-  }, [currentTrialIndex, dispatch, trials]);
+  }, [currentTrialIndex, currentDigitIndex, dispatch, trials]);
 
   const startExperiment = useCallback(() => {
     if (trials.length > 0) {
@@ -40,24 +49,26 @@ export default function useTrialLogic(experiment) {
   const handleResponse = useCallback((key) => {
     if (currentTrialIndex < trials.length) {
       const currentTrial = trials[currentTrialIndex];
-      const isCorrect = (currentTrial.digit % 2 === 0 && key === 'j') || 
-                        (currentTrial.digit % 2 !== 0 && key === 'f');
+      const currentDigit = currentTrial.digits[currentDigitIndex];
+      const isCorrect = (currentDigit % 2 === 0 && key === 'j') ||
+                        (currentDigit % 2 !== 0 && key === 'f');
       const response = {
-        digit: currentTrial.digit,
+        digit: currentDigit,
         response: key,
         responseTime: Date.now() - currentTrial.startTime,
         isCorrect: isCorrect
       };
       dispatch(addResponse(response));
+      currentTrial.responses.push(response);
 
-      setCurrentTrialIndex(prevIndex => prevIndex + 1);
+      setCurrentDigitIndex(prevIndex => prevIndex + 1);
       showNextDigit();
     }
-  }, [currentTrialIndex, dispatch, trials, showNextDigit]);
+  }, [currentTrialIndex, currentDigitIndex, dispatch, trials, showNextDigit]);
 
   useEffect(() => {
     initializeTrials();
   }, [initializeTrials]);
 
-  return { startExperiment, handleResponse, isLoading, trials };
+  return { startExperiment, handleResponse, isLoading, trials, currentTrialIndex, currentDigitIndex };
 }
