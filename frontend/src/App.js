@@ -4,6 +4,9 @@ import { setAppState, setCurrentView } from './redux/globalState';
 import ExperimentList from './components/ExperimentList';
 import ExperimentScreen from './components/ExperimentScreen';
 import About from './components/About';
+import ConfigScreen from './components/ConfigScreen';
+
+
 
 function App() {
   const dispatch = useDispatch();

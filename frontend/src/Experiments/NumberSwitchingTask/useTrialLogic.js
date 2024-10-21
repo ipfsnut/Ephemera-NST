@@ -1,13 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setExperimentState, setCurrentDigit, addResponse, setCurrentTrialIndex as setCurrentTrialIndexAction } from '../../redux/eventSlice';
+import { setExperimentState, setCurrentDigit, addResponse, setCurrentTrialIndex } from '../../redux/eventSlice';
+import { EXPERIMENT_STATES } from '../../utils/constants';
 
-export default function useTrialLogic(experiment) {
+
+export default function useTrialLogic(experiment, config) {
   const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(true);
   const [trials, setTrials] = useState([]);
   const [currentTrialIndex, setCurrentTrialIndex] = useState(0);
   const [currentDigitIndex, setCurrentDigitIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentDigit, setCurrentDigit] = useState(null);
 
   const initializeTrials = useCallback(() => {
     if (experiment && experiment.trials && experiment.trials.length > 0) {
@@ -20,6 +23,10 @@ export default function useTrialLogic(experiment) {
       setIsLoading(false);
     }
   }, [experiment]);
+
+  useEffect(() => {
+    initializeTrials();
+  }, [initializeTrials]);
 
   const showNextDigit = useCallback(() => {
     console.log('showNextDigit called', { currentTrialIndex, trials });
@@ -57,6 +64,7 @@ export default function useTrialLogic(experiment) {
       dispatch(setExperimentState('EXPERIMENT_COMPLETE'));
     }
   }, [currentTrialIndex, currentDigitIndex, dispatch, trials]);
+
   const startExperiment = useCallback(() => {
     if (trials.length > 0) {
       showNextDigit();
@@ -83,9 +91,5 @@ export default function useTrialLogic(experiment) {
     }
   }, [currentTrialIndex, currentDigitIndex, dispatch, trials, showNextDigit]);
 
-  useEffect(() => {
-    initializeTrials();
-  }, [initializeTrials]);
-
-  return { startExperiment, handleResponse, isLoading, trials, currentTrialIndex, currentDigitIndex };
+  return { startExperiment, handleResponse, isLoading, trials };
 }

@@ -267,21 +267,26 @@ exports.updateExperimentConfig = async (req, res) => {
   try {
     const { id } = req.params;
     const { numTrials, difficultyLevel } = req.body;
-    const experiment = await Experiment.findByIdAndUpdate(id, 
-      { 
-        configuration: { 
-          numTrials, 
-          difficultyLevel,
-          ...experimentConfig // Spread the default config
-        } 
-      },
-      { new: true }
-    );
+    
+    const experiment = await Experiment.findById(id);
     if (!experiment) {
       return res.status(404).json({ message: 'Experiment not found' });
     }
-    res.json({ message: 'Experiment configuration updated successfully', experiment });
+
+    experiment.configuration = {
+      ...experiment.configuration,
+      numTrials,
+      difficultyLevel
+    };
+
+    const updatedExperiment = await experiment.save();
+
+    res.json({
+      message: 'Experiment configuration updated successfully',
+      experiment: updatedExperiment
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating experiment configuration', error: error.message });
+    winston.error('Error updating experiment configuration:', error);
+    res.status(500).json({ message: 'Error updating experiment configuration' });
   }
 };

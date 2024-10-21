@@ -28,7 +28,7 @@ export const saveConfig = createAsyncThunk(
 export const updateConfig = createAsyncThunk(
   'config/updateConfig',
   async ({ id, configData }) => {
-    const response = await axios.put(`${API_BASE_URL}/api/configs/${id}`, configData, {
+    const response = await axios.put(`${API_BASE_URL}/events/experiments/${id}/config`, configData, {
       withCredentials: true
     });
     return response.data;
@@ -57,7 +57,11 @@ const configSlice = createSlice({
     status: 'idle',
     error: null
   },
-  reducers: {},
+  reducers: {
+    resetExperimentState: (state) => {
+      // Reset any experiment-specific state here
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchConfig.pending, (state) => {
@@ -81,5 +85,9 @@ const configSlice = createSlice({
       });
   },
 });
+
+export const { resetExperimentState } = configSlice.actions;
+
+export const selectCurrentConfig = (state) => state.config.currentConfig;
 
 export default configSlice.reducer;

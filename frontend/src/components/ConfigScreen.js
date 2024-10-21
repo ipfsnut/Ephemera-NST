@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateConfig } from '../redux/configSlice';
+import { setCurrentExperiment } from '../redux/globalState';
+
 
 const ConfigScreen = () => {
   const dispatch = useDispatch();
   const config = useSelector(state => state.config) || {};
   const [numTrials, setNumTrials] = useState(config.numTrials || 10);
   const [difficultyLevel, setDifficultyLevel] = useState(config.difficultyLevels?.[0] || 'easy');
+  const currentExperiment = useSelector(state => state.globalState.currentExperiment);
+
 
   const handleCustomSubmit = useCallback((e) => {
     e.preventDefault();
-    dispatch(updateConfig({
-      numTrials: parseInt(numTrials, 10),
-      difficultyLevel,
-      isCustom: true
-    }));
-    dispatch(setCurrentView('EXPERIMENT_LIST')); // or 'EXPERIMENT' if you want to start immediately
-  }, [dispatch, numTrials, difficultyLevel]);
-
+    if (currentExperiment) {
+      dispatch(updateConfig({
+        id: currentExperiment._id,
+        configData: {
+          numTrials: parseInt(numTrials, 10),
+          difficultyLevel,
+          isCustom: true
+        }
+      }));
+    }
+  }, [dispatch, numTrials, difficultyLevel, currentExperiment]);
   const handleNumTrialsChange = (e) => {
     const value = e.target.value;
     setNumTrials(value === '' ? '' : parseInt(value, 10));
@@ -61,3 +68,4 @@ const ConfigScreen = () => {
 };
 
 export default React.memo(ConfigScreen);
+

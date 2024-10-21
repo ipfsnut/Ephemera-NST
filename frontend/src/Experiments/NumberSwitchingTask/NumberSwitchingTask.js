@@ -1,23 +1,25 @@
 import React, { useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setAppState } from '../../redux/globalState';
-import { setExperimentState, selectExperimentState, initializeExperiment } from '../../redux/eventSlice';
-import { EXPERIMENT_STATES } from '../../utils/constants';
+import { selectCurrentConfig } from '../../redux/configSlice';
+import { setExperimentState, selectExperimentState } from '../../redux/eventSlice';
 import useTrialLogic from './useTrialLogic';
-import { initialConfig as experimentConfig } from './config';
+import { EXPERIMENT_STATES } from '../../utils/constants';
+import { initializeExperiment } from '../../redux/eventSlice';
+import { setAppState } from '../../redux/globalState';
+
+
 
 const NumberSwitchingTask = ({ experiment }) => {
   const dispatch = useDispatch();
+  const config = useSelector(selectCurrentConfig);
   const { experimentState, currentTrialIndex, currentDigit, totalTrials } = useSelector(selectExperimentState);
-  const config = experimentConfig;
 
-  const { startExperiment, handleResponse, isLoading, trials, currentDigitIndex } = useTrialLogic(experiment);
+  const { startExperiment, handleResponse, isLoading, trials } = useTrialLogic(experiment, config);
 
   const handleKeyPress = useCallback((event) => {
     console.log('Key pressed:', event.key);
     if (experimentState === 'AWAITING_RESPONSE' || experimentState === 'SHOWING_DIGIT') {
-      if (event.key === config.KEYS.ODD || event.key === config.KEYS.EVEN) {
-        handleResponse(event.key);
+      if (event.key === config.KEYS.ODD || event.key === config.KEYS.EVEN) {        handleResponse(event.key);
       }
     } else if (experimentState === 'READY') {
       dispatch(setExperimentState('SHOWING_DIGIT'));
@@ -77,3 +79,4 @@ const NumberSwitchingTask = ({ experiment }) => {
 };
 
 export default NumberSwitchingTask;
+

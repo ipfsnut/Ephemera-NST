@@ -1,26 +1,23 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCurrentConfig } from '../redux/configSlice';
+import { resetExperimentState } from '../redux/configSlice';
 import NumberSwitchingTask from '../Experiments/NumberSwitchingTask/NumberSwitchingTask';
 
 const ExperimentScreen = ({ experiment }) => {
-  console.log('ExperimentScreen received experiment:', experiment);
+  const dispatch = useDispatch();
+  const config = useSelector(selectCurrentConfig);
 
-  const renderExperiment = () => {
-    if (experiment && experiment.name === 'Number Switching Task') {
-      console.log('Rendering NumberSwitchingTask');
-      return <NumberSwitchingTask experiment={experiment} />;
-    }
-    console.log('Experiment not found');
-    return <div>Experiment not found</div>;
-  };
-
-  const experimentComponent = renderExperiment();
-  console.log('Experiment component:', experimentComponent);
+  useEffect(() => {
+    dispatch(resetExperimentState());
+  }, [config, dispatch]);
 
   return (
-    <div className="fixed inset-0 bg-white flex items-center justify-center">
-      {experimentComponent}
+    <div>
+      <h2>{experiment.name}</h2>
+      <NumberSwitchingTask experiment={experiment} />
     </div>
   );
-}
+};
+
 export default ExperimentScreen;
