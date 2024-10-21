@@ -20,6 +20,8 @@ router.get('/experiments/:experimentId/about', eventController.getExperimentAbou
 // NST-specific routes
 router.post('/experiments/nst', eventController.generateNSTExperiment);
 router.post('/experiments/:id/response', eventController.saveExperimentResponse);
+router.put('/experiments/:id/trial-index', eventController.updateTrialIndex);
+
 
 // Data export route
 router.get('/experiments/:id/export', eventController.exportExperimentData);

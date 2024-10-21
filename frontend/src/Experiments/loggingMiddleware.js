@@ -1,9 +1,9 @@
-const loggingMiddleware = store => next => action => {
+export const loggingMiddleware = store => next => action => {
+  if (action && typeof action === 'object') {
     console.log('Dispatching action:', action.type);
-    if (action.type.includes('fetchEvent')) {
-      console.log('fetchEvent action details:', action);
-    }
-    return next(action);
-  };
-  
+  } else {
+    console.log('Dispatching action:', action);
+  }
+  return next(action);
+};
   export default loggingMiddleware;

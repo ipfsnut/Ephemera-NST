@@ -37,6 +37,7 @@ const NumberSwitchingTask = ({ experiment }) => {
   useEffect(() => {
     console.log('experimentState:', experimentState);
     if (experiment.trials.length > 0 && experimentState === 'READY' && currentTrialIndex === 0) {
+      console.log('Starting experiment');
       startExperiment();
     }
   }, [experiment, experimentState, startExperiment, currentTrialIndex]);

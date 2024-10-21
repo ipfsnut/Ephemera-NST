@@ -79,11 +79,8 @@ const eventSlice = createSlice({
       state.responses = [];
       state.totalTrials = action.payload.trials.length;
     },
-    incrementTrialIndex: (state) => {
-      state.currentTrialIndex += 1;
-      if (state.currentTrialIndex >= state.totalTrials) {
-        state.experimentState = 'EXPERIMENT_COMPLETE';
-      }
+    setCurrentTrialIndex: (state, action) => {
+      state.currentTrialIndex = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -117,13 +114,13 @@ const eventSlice = createSlice({
   },
 });
 
-export const { 
-  setExperimentState, 
-  setCurrentDigit, 
-  addResponse, 
-  resetExperiment, 
+export const {
+  setExperimentState,
+  setCurrentDigit,
+  addResponse,
+  resetExperiment,
   initializeExperiment,
-  incrementTrialIndex
+  setCurrentTrialIndex,
 } = eventSlice.actions;
 
 import { createSelector } from '@reduxjs/toolkit';

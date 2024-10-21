@@ -248,3 +248,17 @@ exports.getExperimentAbout = async (req, res) => {
     res.status(500).json({ message: 'Error fetching experiment about information' });
   }
 };
+
+exports.updateTrialIndex = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { trialIndex } = req.body;
+    const experiment = await Experiment.findByIdAndUpdate(id, { currentTrialIndex: trialIndex }, { new: true });
+    if (!experiment) {
+      return res.status(404).json({ message: 'Experiment not found' });
+    }
+    res.json({ message: 'Trial index updated successfully', currentTrialIndex: experiment.currentTrialIndex });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating trial index', error: error.message });
+  }
+};
