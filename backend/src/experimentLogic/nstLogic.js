@@ -1,10 +1,14 @@
 const { generateTrialNumbers } = require('../../utils/markovChain');
 const experimentConfig = require('../../config');
 
-const generateNSTTrials = () => {
-  return generateTrialNumbers(experimentConfig);
+const generateNSTTrials = (numTrials, difficultyLevel) => {
+  const config = {
+    ...experimentConfig,
+    numTrials,
+    difficultyLevel
+  };
+  return generateTrialNumbers(config);
 };
-
 const handleNSTResponse = (response, currentTrial) => {
   const isCorrect = (currentTrial.digit % 2 === 0 && response === 'j') ||
                     (currentTrial.digit % 2 !== 0 && response === 'f');

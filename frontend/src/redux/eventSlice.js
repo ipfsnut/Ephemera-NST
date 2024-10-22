@@ -5,12 +5,7 @@ const initialState = {
   experiments: [],
   currentExperiment: null,
   status: 'idle',
-  error: null,
-  experimentState: 'INITIALIZING',
-  currentTrialIndex: 0,
-  currentDigit: null,
-  responses: [],
-  totalTrials: 0
+  error: null
 };
 
 export const fetchExperiments = createAsyncThunk(
@@ -19,7 +14,6 @@ export const fetchExperiments = createAsyncThunk(
     try {
       const response = await api.get('/api/events/experiments');
       console.log('API response:', JSON.stringify(response.data, null, 2));
-
       return response.data;
     } catch (error) {
       console.error('Error fetching experiments:', error);
@@ -57,30 +51,11 @@ const eventSlice = createSlice({
   name: 'event',
   initialState,
   reducers: {
-    setExperimentState: (state, action) => {
-      state.experimentState = action.payload;
-    },
-    setCurrentDigit: (state, action) => {
-      state.currentDigit = action.payload;
-    },
-    addResponse: (state, action) => {
-      state.responses.push(action.payload);
-    },
     resetExperiment: (state) => {
-      state.currentTrialIndex = 0;
-      state.responses = [];
-      state.experimentState = 'INITIALIZING';
-      state.currentDigit = null;
+      state.currentExperiment = null;
     },
     initializeExperiment: (state, action) => {
       state.currentExperiment = action.payload;
-      state.experimentState = 'READY';
-      state.currentTrialIndex = 0;
-      state.responses = [];
-      state.totalTrials = action.payload.trials.length;
-    },
-    setCurrentTrialIndex: (state, action) => {
-      state.currentTrialIndex = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -102,10 +77,6 @@ const eventSlice = createSlice({
       .addCase(fetchExperiment.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.currentExperiment = action.payload;
-        state.experimentState = 'READY';
-        state.currentTrialIndex = 0;
-        state.responses = [];
-        state.totalTrials = action.payload.trials.length;
       })
       .addCase(fetchExperiment.rejected, (state, action) => {
         state.status = 'failed';
@@ -115,24 +86,13 @@ const eventSlice = createSlice({
 });
 
 export const {
-  setExperimentState,
-  setCurrentDigit,
-  addResponse,
   resetExperiment,
   initializeExperiment,
-  setCurrentTrialIndex,
 } = eventSlice.actions;
 
-import { createSelector } from '@reduxjs/toolkit';
+export const selectCurrentExperiment = state => state.event.currentExperiment;
+export const selectExperiments = state => state.event.experiments;
+export const selectEventStatus = state => state.event.status;
+export const selectEventError = state => state.event.error;
 
-export const selectExperimentState = createSelector(
-  state => state.event,
-  event => ({
-    experimentState: event.experimentState,
-    currentTrialIndex: event.currentTrialIndex,
-    currentDigit: event.currentDigit,
-    totalTrials: event.totalTrials,
-    currentExperiment: event.currentExperiment
-  })
-);
 export default eventSlice.reducer;

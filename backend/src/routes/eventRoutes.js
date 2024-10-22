@@ -16,14 +16,12 @@ router.delete('/events/:id', eventController.deleteEvent);
 router.get('/experiments', eventController.getAllExperiments);
 router.get('/experiments/:experimentId/about', eventController.getExperimentAbout);
 
-
 // NST-specific routes
 router.post('/experiments/nst', eventController.generateNSTExperiment);
 router.post('/experiments/:id/response', eventController.saveExperimentResponse);
 router.put('/experiments/:id/trial-index', eventController.updateTrialIndex);
 router.put('/experiments/:id/config', eventController.updateExperimentConfig);
-
-
+router.put('/experiments/:id/config', eventController.updateExperimentConfig);
 
 // Data export route
 router.get('/experiments/:id/export', eventController.exportExperimentData);

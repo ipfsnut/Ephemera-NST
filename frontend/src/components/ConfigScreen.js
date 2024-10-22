@@ -1,39 +1,52 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateConfig } from '../redux/configSlice';
-import { setCurrentExperiment } from '../redux/globalState';
-
+import { updateConfig, selectCurrentConfig } from '../redux/configSlice';
 
 const ConfigScreen = () => {
   const dispatch = useDispatch();
-  const config = useSelector(state => state.config) || {};
-  const [numTrials, setNumTrials] = useState(config.numTrials || 10);
-  const [difficultyLevel, setDifficultyLevel] = useState(config.difficultyLevels?.[0] || 'easy');
+  const currentConfig = useSelector(selectCurrentConfig);
   const currentExperiment = useSelector(state => state.globalState.currentExperiment);
 
+  const [numTrials, setNumTrials] = useState(currentConfig.numTrials || 1);
+  const [difficultyLevel, setDifficultyLevel] = useState(currentConfig.difficultyLevel || 1);
 
-  const handleCustomSubmit = useCallback((e) => {
-    e.preventDefault();
-    if (currentExperiment) {
-      dispatch(updateConfig({
-        id: currentExperiment._id,
-        configData: {
-          numTrials: parseInt(numTrials, 10),
-          difficultyLevel,
-          isCustom: true
-        }
-      }));
-    }
-  }, [dispatch, numTrials, difficultyLevel, currentExperiment]);
   const handleNumTrialsChange = (e) => {
     const value = e.target.value;
-    setNumTrials(value === '' ? '' : parseInt(value, 10));
+    if (value === '' || parseInt(value) > 0) {
+      setNumTrials(value);
+    }
   };
+
+  const handleSubmit = useCallback(() => {
+    const experimentId = currentConfig.id || currentExperiment._id;
+    if (experimentId) {
+      const configData = {
+        numTrials: parseInt(numTrials) || 1,
+        difficultyLevel: parseInt(difficultyLevel) || 1
+      };
+      console.log('Updating config with:', configData);
+      dispatch(updateConfig({
+        id: experimentId,
+        configData
+      }));
+    } else {
+      console.error('No experiment ID available for config update');
+    }
+  }, [dispatch, currentConfig.id, currentExperiment._id, numTrials, difficultyLevel]);
+
+  const difficultyOptions = useMemo(() =>
+    Object.keys(currentConfig.DIFFICULTY_LEVELS || {}).map(level => (
+      <option key={level} value={level}>
+        Level {level} ({currentConfig.DIFFICULTY_LEVELS[level].min}-{currentConfig.DIFFICULTY_LEVELS[level].max} switches)
+      </option>
+    )),
+    [currentConfig.DIFFICULTY_LEVELS]
+  );
 
   return (
     <div className="config-screen">
       <h2>Configure Experiment</h2>
-      <form onSubmit={handleCustomSubmit}>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
         <div className="input-group">
           <label htmlFor="numTrials">Number of Trials:</label>
           <input
@@ -49,18 +62,13 @@ const ConfigScreen = () => {
           <select
             id="difficultyLevel"
             value={difficultyLevel}
-            onChange={(e) => setDifficultyLevel(e.target.value)}
+            onChange={(e) => setDifficultyLevel(Number(e.target.value))}
           >
-            <option value="all">All Levels (Random)</option>
-            {Object.keys(config.DIFFICULTY_LEVELS || {}).map(level => (
-              <option key={level} value={level}>
-                Level {level} ({config.DIFFICULTY_LEVELS[level].min}-{config.DIFFICULTY_LEVELS[level].max} switches)
-              </option>
-            ))}
+            {difficultyOptions}
           </select>
         </div>
         <div className="button-group">
-          <button type="submit">Confirm Custom Configuration</button>
+          <button type="submit">Update Configuration</button>
         </div>
       </form>
     </div>
@@ -68,4 +76,3 @@ const ConfigScreen = () => {
 };
 
 export default React.memo(ConfigScreen);
-

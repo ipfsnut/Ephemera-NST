@@ -1,9 +1,7 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 const API_BASE_URL = window.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
-
-
 
 export const fetchConfig = createAsyncThunk(
   'config/fetchConfig',
@@ -35,59 +33,120 @@ export const updateConfig = createAsyncThunk(
   }
 );
 
+const initialState = {
+  experimentState: 'INITIALIZING',
+  currentTrial: 0,
+  totalTrials: 0,
+  trialProgress: [],
+  currentConfig: {
+    DIFFICULTY_LEVELS: {
+      1: { min: 1, max: 2 },
+      2: { min: 3, max: 4 },
+      3: { min: 5, max: 6 },
+      4: { min: 7, max: 8 },
+      5: { min: 9, max: 10 },
+      6: { min: 11, max: 12 },
+      7: { min: 13, max: 14 }
+    },
+    numTrials: 1,
+    KEYS: {
+      ODD: 'f',
+      EVEN: 'j'
+    }
+  },
+  status: 'idle',
+  error: null
+};
+
 const configSlice = createSlice({
   name: 'config',
-  initialState: {
-    currentConfig: {
-      DIFFICULTY_LEVELS: {
-        1: { min: 1, max: 2 },
-        2: { min: 3, max: 4 },
-        3: { min: 5, max: 6 },
-        4: { min: 7, max: 8 },
-        5: { min: 9, max: 10 },
-        6: { min: 11, max: 12 },
-        7: { min: 13, max: 14 }
-      },
-      numTrials: 1,
-      KEYS: {
-        ODD: 'f',
-        EVEN: 'j'
-      }
-    },
-    status: 'idle',
-    error: null
-  },
+  initialState,
   reducers: {
+    setExperimentState: (state, action) => {
+      state.experimentState = action.payload;
+    },
+    setCurrentTrial: (state, action) => {
+      state.currentTrial = action.payload;
+    },
+    setTotalTrials: (state, action) => {
+      console.log('configSlice: setTotalTrials payload:', action.payload);
+      state.totalTrials = action.payload;
+      console.log('configSlice: Updated totalTrials:', state.totalTrials);
+    },
+    updateTrialProgress: (state, action) => {
+      state.trialProgress.push(action.payload);
+    },
     resetExperimentState: (state) => {
-      // Reset any experiment-specific state here
-    }
+      state.experimentState = 'INITIALIZING';
+      state.currentTrial = 0;
+      state.trialProgress = [];
+      state.totalTrials = state.currentConfig.numTrials;
+      console.log('configSlice: resetExperimentState - Updated state:', state);
+    },
+    setCurrentDigit: (state, action) => {
+      state.currentDigit = action.payload;
+    },
+    addResponse: (state, action) => {
+      state.trialProgress.push(action.payload);
+    },
+    incrementTrialIndex: (state) => {
+      state.currentTrial += 1;
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchConfig.pending, (state) => {
-        state.status = 'loading';
-      })
       .addCase(fetchConfig.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.currentConfig = action.payload;
-      })
-      .addCase(fetchConfig.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
-      .addCase(saveConfig.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.currentConfig = action.payload;
+        state.totalTrials = action.payload.numTrials;
       })
       .addCase(updateConfig.fulfilled, (state, action) => {
+        console.log('updateConfig fulfilled. Payload:', action.payload);
         state.status = 'succeeded';
-        state.currentConfig = action.payload;
+        state.currentConfig = {
+          ...state.currentConfig,
+          ...action.payload,
+          difficultyLevel: Number(action.payload.difficultyLevel)
+        };
+        state.totalTrials = action.payload.numTrials;
+        console.log('Updated state:', state);
       });
   },
 });
 
-export const { resetExperimentState } = configSlice.actions;
+export const { 
+  setExperimentState, 
+  setCurrentTrial, 
+  setTotalTrials, 
+  updateTrialProgress,
+  resetExperimentState,
+  setCurrentDigit,
+  addResponse,
+  incrementTrialIndex
+} = configSlice.actions;
+export const selectCurrentConfig = createSelector(
+  state => state.config,
+  config => config.currentConfig
+);
 
-export const selectCurrentConfig = (state) => state.config.currentConfig;
+export const selectExperimentState = createSelector(
+  state => state.config,
+  config => config.experimentState
+);
+
+export const selectCurrentTrial = createSelector(
+  state => state.config,
+  config => config.currentTrial
+);
+
+export const selectTotalTrials = createSelector(
+  state => state.config,
+  config => config.totalTrials
+);
+
+export const selectTrialProgress = createSelector(
+  state => state.config,
+  config => config.trialProgress
+);
 
 export default configSlice.reducer;

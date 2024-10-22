@@ -124,18 +124,27 @@ exports.deleteEvent = async (req, res) => {
 
 exports.generateNSTExperiment = async (req, res) => {
   try {
-    const trials = generateNSTTrials();
+    const { numTrials, difficultyLevel } = req.body.config;
+    console.log(`Generating NST experiment with ${numTrials} trials at difficulty level ${difficultyLevel}`);
+
+    const trials = generateNSTTrials(numTrials, parseInt(difficultyLevel));
+    console.log(`Generated ${trials.length} trials`);
+
     const newExperiment = new Experiment({
       name: 'Number Switching Task',
       description: 'Cognitive effort experiment',
       type: 'NST',
-      configuration: experimentConfig,
+      configuration: { ...experimentConfig, numTrials, difficultyLevel },
       trials: trials
     });
+    console.log('New experiment object created:', JSON.stringify(newExperiment, null, 2));
+
     const savedExperiment = await newExperiment.save();
+    console.log('Experiment saved to database with ID:', savedExperiment._id);
+
     res.json(savedExperiment);
   } catch (error) {
-    winston.error('Error generating NST experiment:', error);
+    console.error('Error generating NST experiment:', error);
     res.status(500).json({ message: 'Error generating NST experiment' });
   }
 };
@@ -267,26 +276,32 @@ exports.updateExperimentConfig = async (req, res) => {
   try {
     const { id } = req.params;
     const { numTrials, difficultyLevel } = req.body;
-    
     const experiment = await Experiment.findById(id);
     if (!experiment) {
       return res.status(404).json({ message: 'Experiment not found' });
     }
-
+    
+    console.log(`Updating experiment ${id} with ${numTrials} trials at difficulty level ${difficultyLevel}`);
+    
     experiment.configuration = {
       ...experiment.configuration,
       numTrials,
       difficultyLevel
     };
-
+    
+    // Regenerate trials based on new configuration
+    experiment.trials = generateNSTTrials(numTrials, parseInt(difficultyLevel));
+    console.log(`Regenerated ${experiment.trials.length} trials`);
+    
     const updatedExperiment = await experiment.save();
-
+    console.log('Updated experiment saved to database');
+    
     res.json({
       message: 'Experiment configuration updated successfully',
       experiment: updatedExperiment
     });
   } catch (error) {
-    winston.error('Error updating experiment configuration:', error);
+    console.error('Error updating experiment configuration:', error);
     res.status(500).json({ message: 'Error updating experiment configuration' });
   }
 };
