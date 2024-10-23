@@ -1,0 +1,121 @@
+# Ephemera Platform Vision
+
+## Core Architecture
+
+1. Platform Layer
+- Dashboard showing available experiments
+- Global state for experiment selection and status
+- Shared components library:
+  - Trial display
+  - Response collection
+  - Progress indicators
+  - Results visualization
+- Common styling and theming
+
+2. Experiment Framework
+- Standard experiment lifecycle:
+  - Configuration
+  - Trial generation
+  - Response handling
+  - Data collection
+  - Results processing
+- Base experiment class with:
+  - Trial management
+  - Timing controls
+  - Data validation
+  - State transitions
+- Shared utilities:
+  - Random sequence generation
+  - Timing functions
+  - Data formatting
+  - Export tools
+
+3. Individual Experiments
+NST (Number Switching Task) Implementation:
+- Configuration:
+  - Difficulty levels
+  - Key mappings
+  - Trial counts
+  - Timing parameters
+- Trial Structure:
+  - Stimulus generation
+  - Response validation
+  - Performance metrics
+- Data Collection:
+  - Response times
+  - Accuracy
+  - Switch costs
+  - Learning effects
+
+## API Structure
+/api/platform/
+- /status - Platform status
+- /experiments - List available experiments
+- /settings - Global platform settings
+
+/api/experiments/
+- /:experimentId/config - Get/update experiment config
+- /:experimentId/trials - Trial management
+- /:experimentId/results - Results storage and retrieval
+
+/api/data/
+- /export - Data export endpoints
+- /analysis - Analysis endpoints
+
+## Implementation Phases
+1. Framework Development
+- Build experiment base class
+- Implement core platform components
+- Establish API structure
+- Create shared utilities
+
+2. NST Migration
+- Port existing NST code to new framework
+- Implement NST-specific components
+- Validate against original requirements
+- Performance optimization
+
+3. Platform Features
+- Dashboard implementation
+- Results visualization
+- Export functionality
+- Documentation system
+
+4. Additional Experiments
+- Template creation
+- Documentation for experiment development
+- Testing framework
+- Deployment guidelines
+
+## Development Standards
+- React for UI components
+- Redux for state management
+- Jest for testing
+- Standardized error handling
+- Performance monitoring
+
+
+
+
+action plan:
+
+First Sprint: Framework Foundation
+Create base Experiment class in frontend/src/experiments/base/Experiment.js
+Move NST-specific code to frontend/src/experiments/nst/
+Standardize API routes in both frontend and backend
+Update Redux store to handle experiment lifecycle
+Second Sprint: NST Migration
+Refactor NST to extend base Experiment class
+Update config handling to use new structure
+Implement trial management using base class methods
+Move NST-specific components to dedicated directory
+Third Sprint: Platform Implementation
+Create experiment selection dashboard
+Implement global state management
+Build shared component library
+Add results visualization
+Fourth Sprint: Polish & Documentation
+Add error boundaries
+Implement performance monitoring
+Create experiment development documentation
+Add testing suite

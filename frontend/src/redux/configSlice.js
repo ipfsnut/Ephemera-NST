@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { initialConfig } from '../Experiments/NumberSwitchingTask/config';
 
 const API_BASE_URL = window.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
 
@@ -39,20 +40,8 @@ const initialState = {
   totalTrials: 0,
   trialProgress: [],
   currentConfig: {
-    DIFFICULTY_LEVELS: {
-      1: { min: 1, max: 2 },
-      2: { min: 3, max: 4 },
-      3: { min: 5, max: 6 },
-      4: { min: 7, max: 8 },
-      5: { min: 9, max: 10 },
-      6: { min: 11, max: 12 },
-      7: { min: 13, max: 14 }
-    },
-    numTrials: 1,
-    KEYS: {
-      ODD: 'f',
-      EVEN: 'j'
-    }
+    ...initialConfig,
+    numTrials: initialConfig.TOTAL_TRIALS
   },
   status: 'idle',
   error: null
@@ -114,16 +103,17 @@ const configSlice = createSlice({
   },
 });
 
-export const { 
-  setExperimentState, 
-  setCurrentTrial, 
-  setTotalTrials, 
+export const {
+  setExperimentState,
+  setCurrentTrial,
+  setTotalTrials,
   updateTrialProgress,
   resetExperimentState,
   setCurrentDigit,
   addResponse,
   incrementTrialIndex
 } = configSlice.actions;
+
 export const selectCurrentConfig = createSelector(
   state => state.config,
   config => config.currentConfig

@@ -13,7 +13,7 @@ const experimentConfig = {
       ODD: 'f',
       EVEN: 'j'
     },
-    INTER_TRIAL_DELAY: 2000,
+    INTER_TRIAL_DELAY: 1000,
     numTrials: 14,
     difficultyLevels: ['1', '2', '3', '4', '5', '6', '7'],
     trialsPerDifficulty: 2,
